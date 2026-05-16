@@ -1,0 +1,4726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MyGudang — Inventory Management System MyGudang</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+<style>
+/* ── WARM DARK THEME (default) ── */
+:root {
+  --bg-primary: #1a1410;
+  --bg-secondary: #221c16;
+  --bg-card: #2a2118;
+  --bg-hover: #342820;
+  --border: #3d3028;
+  --border-light: #4e3c30;
+  --text-primary: #f5ede4;
+  --text-secondary: #b8a090;
+  --text-muted: #7a6255;
+  --accent: #e8834a;
+  --accent-glow: rgba(232,131,74,0.18);
+  --accent-hover: #f0a06a;
+  --success: #5ec98a;
+  --success-bg: rgba(94,201,138,0.12);
+  --warning: #f5c842;
+  --warning-bg: rgba(245,200,66,0.12);
+  --danger: #f06b6b;
+  --danger-bg: rgba(240,107,107,0.12);
+  --purple: #c4a0f0;
+  --purple-bg: rgba(196,160,240,0.12);
+  --sidebar-w: 260px;
+  --header-h: 64px;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 4px 28px rgba(0,0,0,0.45);
+  --transition: 0.2s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* ── WARM LIGHT THEME ── */
+[data-theme="light"] {
+  --bg-primary: #fdf6ee;
+  --bg-secondary: #f5ece0;
+  --bg-card: #ffffff;
+  --bg-hover: #fceede;
+  --border: #e8d8c8;
+  --border-light: #d4bfaa;
+  --text-primary: #2c1f14;
+  --text-secondary: #6b4f3a;
+  --text-muted: #a8896e;
+  --accent: #c8612a;
+  --accent-glow: rgba(200,97,42,0.13);
+  --accent-hover: #a84e22;
+  --success: #2d8a5e;
+  --success-bg: rgba(45,138,94,0.1);
+  --warning: #b87b0a;
+  --warning-bg: rgba(184,123,10,0.1);
+  --danger: #c0392b;
+  --danger-bg: rgba(192,57,43,0.1);
+  --purple: #7c4db8;
+  --purple-bg: rgba(124,77,184,0.1);
+  --shadow: 0 4px 24px rgba(80,40,10,0.10);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'Instrument Sans', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  display: flex;
+  transition: background var(--transition), color var(--transition);
+
+}
+
+/* ── SIDEBAR ── */
+#sidebar {
+  width: var(--sidebar-w);
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border);
+  height: 100vh;
+  position: fixed;
+  left: 0; top: 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  transition: width var(--transition), transform var(--transition), background var(--transition);
+
+}
+
+.sidebar-logo {
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: var(--sidebar-w);
+}
+
+.logo-icon {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, var(--accent), var(--purple));
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+  box-shadow: 0 0 16px var(--accent-glow);
+}
+
+.logo-text {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  white-space: nowrap;
+}
+
+.logo-text span { color: var(--accent); }
+
+.sidebar-nav { flex: 1; padding: 12px 0; overflow-y: auto; overflow-x: hidden; }
+
+.nav-section-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 8px 20px 4px;
+  white-space: nowrap;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  transition: all var(--transition);
+  position: relative;
+  white-space: nowrap;
+  border-left: 3px solid transparent;
+  margin: 1px 0;
+}
+
+.nav-item:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+.nav-item.active {
+  color: var(--accent);
+  background: var(--accent-glow);
+  border-left-color: var(--accent);
+}
+
+.nav-icon { font-size: 18px; flex-shrink: 0; width: 22px; text-align: center; }
+.nav-label { flex: 1; }
+
+.nav-badge {
+  background: var(--danger);
+  color: white;
+  font-size: 10px;
+  font-family: 'DM Mono', monospace;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 20px;
+  min-width: 20px;
+  text-align: center;
+}
+
+.sidebar-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+  min-width: var(--sidebar-w);
+}
+
+.sidebar-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.ctrl-btn {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-family: 'DM Mono', monospace;
+  cursor: pointer;
+  transition: all var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.ctrl-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-glow);
+}
+
+/* ── MAIN CONTENT ── */
+#main {
+  margin-left: var(--sidebar-w);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  transition: margin var(--transition);
+  overflow: hidden;
+}
+
+#header {
+  height: var(--header-h);
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 28px;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 90;
+  transition: background var(--transition);
+}
+
+.header-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  flex: 1;
+}
+
+.header-subtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-family: 'DM Mono', monospace;
+}
+
+.header-right { display: flex; align-items: center; gap: 12px; }
+
+.header-date {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: var(--text-muted);
+  background: var(--bg-card);
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+#content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px;
+}
+
+/* ── PAGE SECTIONS ── */
+.page { display: none; }
+.page.active { display: block; animation: fadeIn 0.3s ease; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── STAT CARDS ── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  transition: all var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--card-accent, var(--accent));
+}
+
+.stat-card:hover { border-color: var(--border-light); transform: translateY(-2px); box-shadow: var(--shadow); }
+
+.stat-icon {
+  width: 44px; height: 44px;
+  border-radius: 10px;
+  background: var(--card-bg, var(--accent-glow));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.stat-info { flex: 1; min-width: 0; }
+.stat-value {
+  font-family: 'Syne', sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.stat-label { font-size: 12px; color: var(--text-secondary); }
+.stat-change { font-size: 11px; font-family: 'DM Mono', monospace; margin-top: 4px; }
+.stat-change.up { color: var(--success); }
+.stat-change.down { color: var(--danger); }
+
+/* ── CARDS ── */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: background var(--transition), border-color var(--transition);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.card-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-body { padding: 20px; }
+
+/* ── GRID LAYOUTS ── */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 16px; }
+.grid-65-35 { display: grid; grid-template-columns: 1.8fr 1fr; gap: 16px; margin-bottom: 16px; }
+
+/* ── FORMS ── */
+.form-grid { display: grid; gap: 14px; }
+.form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+
+label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  font-family: 'DM Mono', monospace;
+}
+
+input, select, textarea {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 14px;
+  padding: 10px 13px;
+  outline: none;
+  transition: all var(--transition);
+  width: 100%;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+input::placeholder, textarea::placeholder { color: var(--text-muted); }
+
+select option {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+textarea { resize: vertical; min-height: 80px; }
+
+/* ── BUTTONS ── */
+.btn {
+  padding: 9px 18px;
+  border-radius: var(--radius-sm);
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Instrument Sans', sans-serif;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  transition: all var(--transition);
+  white-space: nowrap;
+  letter-spacing: 0.2px;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: white;
+  box-shadow: 0 2px 12px rgba(79,142,247,0.35);
+}
+.btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
+
+.btn-success {
+  background: var(--success);
+  color: white;
+  box-shadow: 0 2px 12px rgba(54,211,153,0.3);
+}
+.btn-success:hover { opacity: 0.9; transform: translateY(-1px); }
+
+.btn-danger {
+  background: var(--danger);
+  color: white;
+  box-shadow: 0 2px 12px rgba(248,114,114,0.3);
+}
+.btn-danger:hover { opacity: 0.9; transform: translateY(-1px); }
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+.btn-outline:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
+
+.btn-warning {
+  background: var(--warning);
+  color: #1a1a1a;
+}
+.btn-warning:hover { opacity: 0.9; transform: translateY(-1px); }
+
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+.btn-icon { padding: 8px; }
+
+.btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ── TABLES ── */
+.table-container {
+  overflow-x: auto;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+thead th {
+  background: var(--bg-secondary);
+  color: var(--text-muted);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background var(--transition);
+}
+
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--bg-hover); }
+
+tbody td {
+  padding: 12px 16px;
+  vertical-align: middle;
+}
+
+/* ── BADGES ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: 'DM Mono', monospace;
+}
+
+.badge-success { background: var(--success-bg); color: var(--success); }
+.badge-warning { background: var(--warning-bg); color: var(--warning); }
+.badge-danger { background: var(--danger-bg); color: var(--danger); }
+.badge-accent { background: var(--accent-glow); color: var(--accent); }
+.badge-purple { background: var(--purple-bg); color: var(--purple); }
+
+/* ── SEARCH BAR ── */
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.search-input-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+}
+
+.search-input-wrap input {
+  padding-left: 36px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font-size: 14px;
+  pointer-events: none;
+}
+
+/* ── CHART CONTAINERS ── */
+.chart-wrap {
+  position: relative;
+  height: 280px;
+}
+
+.chart-wrap canvas { max-height: 280px; }
+
+/* ── MODAL ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-overlay.open { display: flex; animation: fadeIn 0.2s ease; }
+
+.modal {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 680px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+
+.modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  background: var(--bg-card);
+  z-index: 1;
+}
+
+.modal-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.modal-body { padding: 24px; }
+.modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 20px;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all var(--transition);
+}
+.close-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+/* ── TOAST ── */
+#toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.toast {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  box-shadow: var(--shadow);
+  animation: slideIn 0.3s ease;
+  min-width: 260px;
+  max-width: 360px;
+  border-left: 3px solid var(--accent);
+}
+
+.toast.success { border-left-color: var(--success); }
+.toast.error { border-left-color: var(--danger); }
+.toast.warning { border-left-color: var(--warning); }
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* ── FORECAST CARDS ── */
+.forecast-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.forecast-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.forecast-item:last-child { border-bottom: none; }
+
+.reorder-bar {
+  height: 6px;
+  background: var(--bg-primary);
+  border-radius: 3px;
+  margin-top: 6px;
+  overflow: hidden;
+}
+
+.reorder-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.6s ease;
+}
+
+/* ── SIGNATURE PAD ── */
+#sig-canvas {
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  cursor: crosshair;
+  background: var(--bg-primary);
+  width: 100%;
+  height: 160px;
+  display: block;
+}
+
+/* ── BULK GRID ── */
+.bulk-grid {
+  overflow-x: auto;
+}
+
+.bulk-grid table { min-width: 700px; }
+.bulk-grid tbody td { padding: 6px 8px; }
+.bulk-grid tbody td input, .bulk-grid tbody td select {
+  padding: 6px 8px;
+  font-size: 12px;
+}
+
+/* ── LOW STOCK INDICATOR ── */
+.stock-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stock-bar {
+  flex: 1;
+  height: 4px;
+  background: var(--bg-primary);
+  border-radius: 2px;
+  overflow: hidden;
+  max-width: 80px;
+}
+
+.stock-fill {
+  height: 100%;
+  border-radius: 2px;
+}
+
+/* ── HAMBURGER BUTTON ── */
+#hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all var(--transition);
+  padding: 0;
+}
+
+#hamburger:hover { border-color: var(--accent); background: var(--accent-glow); }
+
+#hamburger span {
+  display: block;
+  width: 18px;
+  height: 2px;
+  background: var(--text-primary);
+  border-radius: 2px;
+  transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+  transform-origin: center;
+}
+
+#hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+#hamburger.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+#hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* ── SIDEBAR OVERLAY ── */
+#sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 99;
+  backdrop-filter: blur(2px);
+  animation: fadeIn 0.2s ease;
+}
+
+#sidebar-overlay.open { display: block; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  :root { --sidebar-w: 0px; }
+
+  #hamburger { display: flex; }
+
+  #sidebar {
+    transform: translateX(-260px);
+    width: 260px;
+    z-index: 200;
+    box-shadow: 4px 0 32px rgba(0,0,0,0.5);
+  }
+
+  #sidebar.open { transform: translateX(0); }
+
+  #main { margin-left: 0; }
+
+  #header {
+    padding: 0 16px;
+    gap: 10px;
+  }
+
+  .header-title { font-size: 16px; }
+  .header-date { display: none; }
+
+  #content { padding: 16px; }
+
+  .grid-2, .grid-65-35 { grid-template-columns: 1fr; }
+  .grid-3 { grid-template-columns: 1fr; }
+
+  .page-header { flex-direction: column; align-items: flex-start; }
+  .btn-group { flex-wrap: wrap; }
+
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+
+  .search-bar { flex-direction: column; align-items: stretch; }
+  .search-input-wrap { min-width: unset; }
+
+  .modal { margin: 12px; max-height: calc(100vh - 24px); }
+  .modal-body { padding: 16px; }
+  .modal-footer { padding: 12px 16px; }
+
+  .form-row { grid-template-columns: 1fr; }
+
+  table { font-size: 12px; }
+  thead th, tbody td { padding: 10px 10px; }
+
+  .btn { padding: 8px 14px; font-size: 12px; }
+  .btn-sm { padding: 5px 10px; font-size: 11px; }
+}
+
+@media (max-width: 420px) {
+  .stats-grid { grid-template-columns: 1fr; }
+  .tab-bar { flex-wrap: wrap; }
+}
+
+/* ── MISC ── */
+.section-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 20px 0;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--text-muted);
+}
+
+.empty-icon { font-size: 48px; margin-bottom: 12px; }
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.page-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.page-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.info-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.info-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+  background: var(--bg-primary);
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+}
+
+.tab-bar {
+  display: flex;
+  gap: 4px;
+  background: var(--bg-secondary);
+  border-radius: 10px;
+  padding: 4px;
+  margin-bottom: 20px;
+  border: 1px solid var(--border);
+}
+
+.tab {
+  padding: 8px 16px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  color: var(--text-secondary);
+  border: none;
+  background: none;
+  font-family: 'Instrument Sans', sans-serif;
+}
+
+.tab.active {
+  background: var(--bg-card);
+  color: var(--accent);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+
+.tab-content { display: none; }
+.tab-content.active { display: block; animation: fadeIn 0.25s ease; }
+
+.step-indicator {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.step-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-family: 'DM Mono', monospace;
+  font-weight: 500;
+}
+
+.step.active .step-num {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.step-divider { flex: 1; height: 1px; background: var(--border); }
+
+.alert {
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.alert-warning { background: var(--warning-bg); border: 1px solid var(--warning); color: var(--warning); }
+.alert-danger { background: var(--danger-bg); border: 1px solid var(--danger); color: var(--danger); }
+.alert-success { background: var(--success-bg); border: 1px solid var(--success); color: var(--success); }
+.alert-info { background: var(--accent-glow); border: 1px solid var(--accent); color: var(--accent); }
+
+.sku-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  padding: 2px 7px;
+  border-radius: 4px;
+  color: var(--text-muted);
+}
+
+.scrollbar-thin::-webkit-scrollbar { width: 4px; height: 4px; }
+.scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+.scrollbar-thin::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* ── ITEM HISTORY REPORT ── */
+.ih-item-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.ih-item-header {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.ih-item-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  flex: 1;
+}
+
+.ih-stock-flow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 13px;
+}
+
+.ih-flow-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 80px;
+}
+
+.ih-flow-label {
+  font-size: 10px;
+  font-family: 'DM Mono', monospace;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ih-flow-val {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.ih-arrow {
+  color: var(--text-muted);
+  font-size: 16px;
+}
+
+.ih-txn-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.ih-txn-table th {
+  background: var(--bg-secondary);
+  padding: 8px 14px;
+  text-align: left;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.ih-txn-table td {
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.ih-txn-table tr:last-child td { border-bottom: none; }
+.ih-txn-table tr:hover td { background: var(--bg-hover); }
+
+.ih-running {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.ih-no-txn {
+  text-align: center;
+  padding: 20px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+#content::-webkit-scrollbar { width: 5px; }
+#content::-webkit-scrollbar-track { background: transparent; }
+#content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+.sidebar-nav::-webkit-scrollbar { width: 0; }
+</style>
+</head>
+<body data-theme="dark">
+
+<!-- SIDEBAR OVERLAY (mobile) -->
+<div id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<!-- SIDEBAR -->
+<nav id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">📦</div>
+    <div class="logo-text">My<span>Gudang</span></div>
+  </div>
+
+  <div class="sidebar-nav">
+    <div class="nav-section-label" data-i18n="nav.overview">Overview</div>
+    <div class="nav-item active" onclick="navigate('dashboard')">
+      <span class="nav-icon">📊</span>
+      <span class="nav-label" data-i18n="nav.dashboard">Dashboard</span>
+    </div>
+
+    <div class="nav-section-label" data-i18n="nav.master">Master Data</div>
+    <div class="nav-item" onclick="navigate('items')">
+      <span class="nav-icon">🗂️</span>
+      <span class="nav-label" data-i18n="nav.items">Item Master</span>
+    </div>
+    <div class="nav-item" onclick="navigate('units')">
+      <span class="nav-icon">📐</span>
+      <span class="nav-label" data-i18n="nav.units">Units & Categories</span>
+    </div>
+
+    <div class="nav-section-label" data-i18n="nav.transactions">Transactions</div>
+    <div class="nav-item" onclick="navigate('receipt')">
+      <span class="nav-icon">📥</span>
+      <span class="nav-label" data-i18n="nav.receipt">Goods Receipt</span>
+    </div>
+    <div class="nav-item" onclick="navigate('issuance')">
+      <span class="nav-icon">📤</span>
+      <span class="nav-label" data-i18n="nav.issuance">Goods Issuance</span>
+    </div>
+    <div class="nav-item" onclick="navigate('bulk')">
+      <span class="nav-icon">⚡</span>
+      <span class="nav-label" data-i18n="nav.bulk">Bulk Input</span>
+    </div>
+
+    <div class="nav-section-label" data-i18n="nav.analytics">Analytics</div>
+    <div class="nav-item" onclick="navigate('forecast')">
+      <span class="nav-icon">🔮</span>
+      <span class="nav-label" data-i18n="nav.forecast">Forecasting</span>
+    </div>
+    <div class="nav-item" onclick="navigate('reports')">
+      <span class="nav-icon">📋</span>
+      <span class="nav-label" data-i18n="nav.reports">Reports & Export</span>
+    </div>
+    <div class="nav-item" onclick="navigate('itemhistory')">
+      <span class="nav-icon">📜</span>
+      <span class="nav-label">Item History</span>
+    </div>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="sidebar-controls">
+      <button class="ctrl-btn" onclick="toggleTheme()">
+        <span id="theme-icon">☀️</span>
+        <span id="theme-label" data-i18n="btn.light">Light</span>
+      </button>
+      <button class="ctrl-btn" onclick="toggleLang()">
+        <span>🌐</span>
+        <span id="lang-label">ID</span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN CONTENT -->
+<div id="main">
+  <header id="header">
+    <button id="hamburger" onclick="toggleSidebar()" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+    <div style="flex:1;min-width:0">
+      <div class="header-title" id="page-title" data-i18n="page.dashboard">Dashboard</div>
+      <div class="header-subtitle" data-i18n="page.dashboard.sub">Warehouse Inventory Overview</div>
+    </div>
+    <div class="header-right">
+      <div class="header-date" id="current-date"></div>
+      <button class="btn btn-outline btn-sm" onclick="openLowStockModal()">
+        ⚠️ <span id="low-stock-count">0</span> <span data-i18n="btn.lowstock">Low Stock</span>
+      </button>
+    </div>
+  </header>
+
+  <div id="content">
+
+    <!-- ==================== DASHBOARD ==================== -->
+    <section id="page-dashboard" class="page active">
+      <div class="stats-grid">
+        <div class="stat-card" style="--card-accent:var(--accent);--card-bg:var(--accent-glow)">
+          <div class="stat-icon">📦</div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-total-items">0</div>
+            <div class="stat-label" data-i18n="stat.totalItems">Total Items</div>
+            <div class="stat-change up" id="stat-items-change">— SKUs</div>
+          </div>
+        </div>
+        <div class="stat-card" style="--card-accent:var(--success);--card-bg:var(--success-bg)">
+          <div class="stat-icon">📥</div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-in">0</div>
+            <div class="stat-label" data-i18n="stat.goodsIn">Goods Receipts</div>
+            <div class="stat-change up" id="stat-in-val">This month</div>
+          </div>
+        </div>
+        <div class="stat-card" style="--card-accent:var(--danger);--card-bg:var(--danger-bg)">
+          <div class="stat-icon">📤</div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-out">0</div>
+            <div class="stat-label" data-i18n="stat.goodsOut">Goods Issued</div>
+            <div class="stat-change down" id="stat-out-val">This month</div>
+          </div>
+        </div>
+        <div class="stat-card" style="--card-accent:var(--warning);--card-bg:var(--warning-bg)">
+          <div class="stat-icon">⚠️</div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-low">0</div>
+            <div class="stat-label" data-i18n="stat.lowStock">Low Stock Items</div>
+            <div class="stat-change down" data-i18n="stat.needsReorder">Needs reorder</div>
+          </div>
+        </div>
+        <div class="stat-card" style="--card-accent:var(--purple);--card-bg:var(--purple-bg)">
+          <div class="stat-icon">📊</div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-cats">0</div>
+            <div class="stat-label" data-i18n="stat.categories">Categories</div>
+            <div class="stat-change" data-i18n="stat.units">Active units</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-65-35">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📈 <span data-i18n="chart.topSelling">Top-Selling Items (Issuance)</span></div>
+            <select id="chart-period" style="font-size:12px;padding:5px 10px;width:auto" onchange="renderCharts()">
+              <option value="7" data-i18n="period.7d">Last 7 Days</option>
+              <option value="30" selected data-i18n="period.30d">Last 30 Days</option>
+              <option value="90" data-i18n="period.90d">Last 90 Days</option>
+            </select>
+          </div>
+          <div class="card-body">
+            <div class="chart-wrap"><canvas id="topSalesChart"></canvas></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">🗂️ <span data-i18n="chart.stockByCategory">Stock by Category</span></div>
+          </div>
+          <div class="card-body">
+            <div class="chart-wrap"><canvas id="categoryChart"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📉 <span data-i18n="chart.stockMovement">Stock Movement</span></div>
+          </div>
+          <div class="card-body">
+            <div class="chart-wrap"><canvas id="movementChart"></canvas></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">🔴 <span data-i18n="chart.lowStockItems">Low Stock Items</span></div>
+            <button class="btn btn-sm btn-outline" onclick="navigate('items')" data-i18n="btn.viewAll">View All</button>
+          </div>
+          <div class="card-body" style="padding:0">
+            <div id="low-stock-list" style="max-height:250px;overflow-y:auto"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== ITEM MASTER ==================== -->
+    <section id="page-items" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title" data-i18n="page.items">Item Master</div>
+          <div class="page-desc" data-i18n="page.items.desc">Manage all inventory items, SKUs, and stock levels</div>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-outline" onclick="exportItemsExcel()">📊 <span data-i18n="btn.exportExcel">Excel</span></button>
+          <button class="btn btn-warning" onclick="openItemImportModal()">📥 <span>Bulk Import</span></button>
+          <button class="btn btn-primary" onclick="openItemModal()">+ <span data-i18n="btn.addItem">Add Item</span></button>
+        </div>
+      </div>
+
+      <div class="search-bar">
+        <div class="search-input-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="item-search" placeholder="Search SKU, name..." oninput="renderItemTable()">
+        </div>
+        <select id="item-cat-filter" onchange="renderItemTable()" style="width:auto;min-width:140px">
+          <option value="" data-i18n="filter.allCategories">All Categories</option>
+        </select>
+        <select id="item-stock-filter" onchange="renderItemTable()" style="width:auto;min-width:140px">
+          <option value="" data-i18n="filter.allStock">All Stock Status</option>
+          <option value="low" data-i18n="filter.lowStock">Low Stock</option>
+          <option value="ok" data-i18n="filter.ok">OK</option>
+        </select>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th data-i18n="col.sku">SKU / ID</th>
+              <th data-i18n="col.name">Item Name</th>
+              <th data-i18n="col.category">Category</th>
+              <th data-i18n="col.stock">Stock</th>
+              <th data-i18n="col.minStock">Min Stock</th>
+              <th data-i18n="col.unit">Unit</th>
+              <th data-i18n="col.status">Status</th>
+              <th data-i18n="col.actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="item-table-body">
+            <tr><td colspan="8" class="empty-state"><div class="empty-icon">📦</div><div data-i18n="empty.items">No items yet. Add your first item!</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ==================== UNITS & CATEGORIES ==================== -->
+    <section id="page-units" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title" data-i18n="page.units">Units & Categories</div>
+          <div class="page-desc" data-i18n="page.units.desc">Configure measurement units and item categories</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📐 <span data-i18n="section.units">Units of Measurement</span></div>
+            <button class="btn btn-sm btn-primary" onclick="addUnit()">+</button>
+          </div>
+          <div class="card-body">
+            <div class="form-row" style="margin-bottom:16px">
+              <input type="text" id="new-unit-name" placeholder="e.g. pcs, pack, box">
+              <input type="text" id="new-unit-desc" placeholder="Description (optional)">
+            </div>
+            <div id="units-list" class="table-container">
+              <table><thead><tr><th data-i18n="col.unit">Unit</th><th data-i18n="col.desc">Description</th><th></th></tr></thead>
+              <tbody id="units-table-body"></tbody></table>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">🏷️ <span data-i18n="section.categories">Item Categories</span></div>
+            <button class="btn btn-sm btn-primary" onclick="addCategory()">+</button>
+          </div>
+          <div class="card-body">
+            <div class="form-row" style="margin-bottom:16px">
+              <input type="text" id="new-cat-name" placeholder="Category name">
+              <input type="color" id="new-cat-color" value="#4f8ef7" style="width:60px;padding:2px;height:40px">
+            </div>
+            <div id="cats-list" class="table-container">
+              <table><thead><tr><th data-i18n="col.category">Category</th><th data-i18n="col.color">Color</th><th></th></tr></thead>
+              <tbody id="cats-table-body"></tbody></table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== GOODS RECEIPT ==================== -->
+    <section id="page-receipt" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title" data-i18n="page.receipt">Goods Receipt (Barang Masuk)</div>
+          <div class="page-desc" data-i18n="page.receipt.desc">Record incoming goods with MRO, PO and delivery details</div>
+        </div>
+        <button class="btn btn-outline" onclick="navigate('bulk')" data-i18n="btn.bulkInput">⚡ Bulk Input</button>
+      </div>
+
+      <div class="grid-65-35">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📥 <span data-i18n="form.receiptTitle">New Goods Receipt</span></div>
+          </div>
+          <div class="card-body">
+            <div class="form-grid">
+              <div class="form-row">
+                <div class="form-group">
+                  <label data-i18n="field.mro">MRO Number</label>
+                  <input type="text" id="r-mro" placeholder="MRO-2024-XXXX">
+                </div>
+                <div class="form-group">
+                  <label data-i18n="field.po">PO Number</label>
+                  <input type="text" id="r-po" placeholder="PO-XXXX">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label data-i18n="field.delivery">Delivery Note No.</label>
+                  <input type="text" id="r-dn" placeholder="DN-XXXX">
+                </div>
+                <div class="form-group">
+                  <label data-i18n="field.origin">Origin / Sender</label>
+                  <input type="text" id="r-origin" placeholder="Supplier name or location">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label data-i18n="field.item">Item</label>
+                  <select id="r-item" onchange="autofillReceiptUnit()">
+                    <option value="" data-i18n="sel.selectItem">— Select Item —</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label data-i18n="field.qty">Quantity</label>
+                  <input type="number" id="r-qty" min="1" placeholder="0">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label data-i18n="field.unit">Unit</label>
+                  <input type="text" id="r-unit" readonly placeholder="auto-filled">
+                </div>
+                <div class="form-group">
+                  <label data-i18n="field.date">Date</label>
+                  <input type="date" id="r-date">
+                </div>
+              </div>
+              <div class="form-group">
+                <label data-i18n="field.notes">Notes</label>
+                <textarea id="r-notes" placeholder="Additional notes..."></textarea>
+              </div>
+              <div class="btn-group">
+                <button class="btn btn-success" onclick="submitReceipt()">✅ <span data-i18n="btn.submitReceipt">Submit Receipt</span></button>
+                <button class="btn btn-outline" onclick="clearReceiptForm()">↺ <span data-i18n="btn.clear">Clear</span></button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📋 <span data-i18n="section.recentReceipts">Recent Receipts</span></div>
+          </div>
+          <div style="max-height:460px;overflow-y:auto">
+            <table>
+              <thead><tr><th data-i18n="col.date">Date</th><th data-i18n="col.item">Item</th><th data-i18n="col.qty">Qty</th><th>MRO</th></tr></thead>
+              <tbody id="receipt-log-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== GOODS ISSUANCE ==================== -->
+    <section id="page-issuance" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title" data-i18n="page.issuance">Goods Issuance (Barang Keluar)</div>
+          <div class="page-desc" data-i18n="page.issuance.desc">Record outgoing goods with mandatory purpose/reason</div>
+        </div>
+        <button class="btn btn-outline" onclick="navigate('bulk')" data-i18n="btn.bulkInput">⚡ Bulk Input</button>
+      </div>
+
+      <div class="grid-65-35">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📤 <span data-i18n="form.issuanceTitle">New Goods Issuance</span></div>
+          </div>
+          <div class="card-body">
+            <div class="form-grid">
+              <div class="form-row">
+                <div class="form-group">
+                  <label data-i18n="field.item">Item</label>
+                  <select id="i-item" onchange="autofillIssuanceInfo()">
+                    <option value="" data-i18n="sel.selectItem">— Select Item —</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label data-i18n="field.qty">Quantity</label>
+                  <input type="number" id="i-qty" min="1" placeholder="0">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label data-i18n="field.unit">Unit</label>
+                  <input type="text" id="i-unit" readonly placeholder="auto-filled">
+                </div>
+                <div class="form-group">
+                  <label data-i18n="field.availstock">Available Stock</label>
+                  <input type="text" id="i-avail" readonly placeholder="—">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>⭐ <span data-i18n="field.purpose">Purpose / Reason of Retrieval</span> <span style="color:var(--danger)">*</span></label>
+                <textarea id="i-purpose" placeholder="Mandatory: State the purpose or reason for this issuance..." style="min-height:100px"></textarea>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label data-i18n="field.requestedBy">Requested By</label>
+                  <input type="text" id="i-requester" placeholder="Name or department">
+                </div>
+                <div class="form-group">
+                  <label data-i18n="field.date">Date</label>
+                  <input type="date" id="i-date">
+                </div>
+              </div>
+              <div class="form-group">
+                <label data-i18n="field.notes">Notes</label>
+                <textarea id="i-notes" placeholder="Additional notes..."></textarea>
+              </div>
+              <div class="btn-group">
+                <button class="btn btn-danger" onclick="submitIssuance()">📤 <span data-i18n="btn.submitIssuance">Submit Issuance</span></button>
+                <button class="btn btn-outline" onclick="clearIssuanceForm()">↺ <span data-i18n="btn.clear">Clear</span></button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📋 <span data-i18n="section.recentIssuances">Recent Issuances</span></div>
+          </div>
+          <div style="max-height:460px;overflow-y:auto">
+            <table>
+              <thead><tr><th data-i18n="col.date">Date</th><th data-i18n="col.item">Item</th><th data-i18n="col.qty">Qty</th><th data-i18n="col.purpose">Purpose</th></tr></thead>
+              <tbody id="issuance-log-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== BULK INPUT ==================== -->
+    <section id="page-bulk" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title" data-i18n="page.bulk">Bulk Input</div>
+          <div class="page-desc" data-i18n="page.bulk.desc">Upload Excel or use batch entry grid for multiple transactions</div>
+        </div>
+      </div>
+
+      <div class="tab-bar">
+        <button class="tab active" onclick="switchBulkTab('excel')" data-i18n="tab.excelUpload">📊 Excel Upload</button>
+        <button class="tab" onclick="switchBulkTab('grid')" data-i18n="tab.batchGrid">⚡ Batch Entry Grid</button>
+      </div>
+
+      <div id="bulk-tab-excel" class="tab-content active">
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">📤 <span data-i18n="bulk.uploadExcel">Upload Excel File</span></div>
+            </div>
+            <div class="card-body">
+              <div class="alert alert-info">
+                💡 <span data-i18n="bulk.uploadHint">Download the template first, fill in your data, then upload. Columns: Type (IN/OUT), Date, SKU, Item Name, Quantity, MRO (for IN), Purpose (for OUT).</span>
+              </div>
+              <div class="btn-group" style="margin-bottom:16px">
+                <button class="btn btn-outline" onclick="downloadBulkTemplate()">📋 <span data-i18n="btn.downloadTemplate">Download Template</span></button>
+              </div>
+              <label style="font-size:14px;display:block;margin-bottom:8px" data-i18n="bulk.selectFile">Select Excel file (.xlsx, .xls):</label>
+              <input type="file" id="bulk-file" accept=".xlsx,.xls" onchange="previewBulkExcel()" style="font-size:13px">
+              <div id="bulk-preview" style="margin-top:16px"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">ℹ️ <span data-i18n="bulk.format">File Format Guide</span></div>
+            </div>
+            <div class="card-body">
+              <table style="font-size:12px">
+                <thead><tr><th data-i18n="col.column">Column</th><th data-i18n="col.format">Format</th><th data-i18n="col.required">Required</th></tr></thead>
+                <tbody>
+                  <tr><td><span class="sku-tag">Type</span></td><td>IN or OUT</td><td><span class="badge badge-danger">Yes</span></td></tr>
+                  <tr><td><span class="sku-tag">Date</span></td><td>YYYY-MM-DD</td><td><span class="badge badge-danger">Yes</span></td></tr>
+                  <tr><td><span class="sku-tag">SKU</span></td><td>Item SKU code</td><td><span class="badge badge-danger">Yes</span></td></tr>
+                  <tr><td><span class="sku-tag">Qty</span></td><td>Number > 0</td><td><span class="badge badge-danger">Yes</span></td></tr>
+                  <tr><td><span class="sku-tag">MRO</span></td><td>MRO-XXXX</td><td><span class="badge badge-warning">IN only</span></td></tr>
+                  <tr><td><span class="sku-tag">PO</span></td><td>PO-XXXX</td><td><span class="badge badge-accent">Optional</span></td></tr>
+                  <tr><td><span class="sku-tag">Purpose</span></td><td>Text reason</td><td><span class="badge badge-warning">OUT only</span></td></tr>
+                  <tr><td><span class="sku-tag">Notes</span></td><td>Any text</td><td><span class="badge badge-accent">Optional</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="bulk-tab-grid" class="tab-content">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">⚡ <span data-i18n="bulk.batchEntry">Batch Entry Grid</span></div>
+            <div class="btn-group">
+              <select id="bulk-type" style="font-size:13px;padding:6px 10px;width:auto">
+                <option value="IN" data-i18n="type.in">IN (Receipt)</option>
+                <option value="OUT" data-i18n="type.out">OUT (Issuance)</option>
+              </select>
+              <button class="btn btn-sm btn-outline" onclick="addBulkRow()">+ <span data-i18n="btn.addRow">Row</span></button>
+              <button class="btn btn-sm btn-success" onclick="submitBulkGrid()">✅ <span data-i18n="btn.submitAll">Submit All</span></button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="bulk-grid table-container">
+              <table id="bulk-grid-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th data-i18n="col.date">Date</th>
+                    <th data-i18n="col.item">Item</th>
+                    <th data-i18n="col.qty">Qty</th>
+                    <th>MRO / Purpose</th>
+                    <th data-i18n="col.notes">Notes</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="bulk-grid-body"></tbody>
+              </table>
+            </div>
+            <div class="btn-group" style="margin-top:12px">
+              <button class="btn btn-sm btn-outline" onclick="addBulkRow()">+ <span data-i18n="btn.addRow">Add Row</span></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== FORECASTING ==================== -->
+    <section id="page-forecast" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title" data-i18n="page.forecast">Inventory Forecasting</div>
+          <div class="page-desc" data-i18n="page.forecast.desc">Smart reorder suggestions based on historical usage (14–30 day lead time)</div>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-success" onclick="openForecastExportModal()">📊 Export Excel</button>
+          <button class="btn btn-danger" onclick="openForecastExportModal('pdf')">📄 Export PDF</button>
+        </div>
+      </div>
+
+      <div class="alert alert-info" style="margin-bottom:20px">
+        🔮 <span data-i18n="forecast.info">Calculations use average daily consumption over the last 30 days. Reorder Point = Avg Daily Usage × Max Lead Time (30d). Safety Stock = Avg Daily Usage × (Max Lead Time − Min Lead Time).</span>
+      </div>
+
+      <div class="grid-2" style="margin-bottom:16px">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📊 <span data-i18n="forecast.summary">Forecast Summary</span></div>
+          </div>
+          <div class="card-body">
+            <div id="forecast-summary" class="stats-grid" style="grid-template-columns:1fr 1fr;gap:12px">
+              <div class="stat-card" style="--card-accent:var(--danger);--card-bg:var(--danger-bg)">
+                <div class="stat-icon">🔴</div>
+                <div class="stat-info">
+                  <div class="stat-value" id="fc-critical">0</div>
+                  <div class="stat-label" data-i18n="forecast.critical">Critical</div>
+                </div>
+              </div>
+              <div class="stat-card" style="--card-accent:var(--warning);--card-bg:var(--warning-bg)">
+                <div class="stat-icon">🟡</div>
+                <div class="stat-info">
+                  <div class="stat-value" id="fc-warning">0</div>
+                  <div class="stat-label" data-i18n="forecast.warning">Warning</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">⚙️ <span data-i18n="forecast.params">Lead Time Parameters</span></div>
+          </div>
+          <div class="card-body">
+            <div class="form-row">
+              <div class="form-group">
+                <label data-i18n="forecast.minLead">Min Lead Time (days)</label>
+                <input type="number" id="fc-min-lead" value="14" min="1" onchange="calcForecasts()">
+              </div>
+              <div class="form-group">
+                <label data-i18n="forecast.maxLead">Max Lead Time (days)</label>
+                <input type="number" id="fc-max-lead" value="30" min="1" onchange="calcForecasts()">
+              </div>
+            </div>
+            <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="calcForecasts()">🔄 <span data-i18n="btn.recalculate">Recalculate</span></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📋 <span data-i18n="forecast.table">Reorder Recommendations</span></div>
+          <div class="btn-group">
+            <select id="fc-filter" onchange="renderForecastTable()" style="font-size:13px;padding:6px 10px;width:auto">
+              <option value="" data-i18n="filter.all">All Items</option>
+              <option value="critical" data-i18n="forecast.critical">Critical Only</option>
+              <option value="warning" data-i18n="forecast.warning">Warning Only</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th data-i18n="col.sku">SKU</th>
+                <th data-i18n="col.name">Item Name</th>
+                <th data-i18n="col.currentStock">Current Stock</th>
+                <th data-i18n="forecast.avgDaily">Avg Daily Use</th>
+                <th data-i18n="forecast.daysLeft">Days Left</th>
+                <th data-i18n="forecast.safetyStock">Safety Stock</th>
+                <th data-i18n="forecast.reorderPoint">Reorder Point</th>
+                <th data-i18n="forecast.suggestQty">Suggest Order Qty</th>
+                <th data-i18n="col.status">Status</th>
+              </tr>
+            </thead>
+            <tbody id="forecast-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== REPORTS ==================== -->
+    <section id="page-reports" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title" data-i18n="page.reports">Reports & Export</div>
+          <div class="page-desc" data-i18n="page.reports.desc">Generate, filter, and export inventory reports with digital signature</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-header">
+          <div class="card-title">🔍 <span data-i18n="report.filters">Report Filters</span></div>
+        </div>
+        <div class="card-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label data-i18n="field.reportType">Report Type</label>
+              <select id="rpt-type" onchange="generateReport()">
+                <option value="all" data-i18n="rpt.all">All Transactions</option>
+                <option value="IN" data-i18n="rpt.receipts">Goods Receipts Only</option>
+                <option value="OUT" data-i18n="rpt.issuances">Goods Issuances Only</option>
+                <option value="stock" data-i18n="rpt.stock">Current Stock Snapshot</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label data-i18n="field.startDate">Start Date</label>
+              <input type="date" id="rpt-start" onchange="generateReport()">
+            </div>
+            <div class="form-group">
+              <label data-i18n="field.endDate">End Date</label>
+              <input type="date" id="rpt-end" onchange="generateReport()">
+            </div>
+            <div class="form-group">
+              <label data-i18n="field.category">Category</label>
+              <select id="rpt-cat" onchange="generateReport()">
+                <option value="" data-i18n="filter.allCategories">All Categories</option>
+              </select>
+            </div>
+          </div>
+          <div class="btn-group" style="margin-top:8px">
+            <button class="btn btn-success" onclick="exportReportExcel()">📊 <span data-i18n="btn.exportExcel">Export Excel</span></button>
+            <button class="btn btn-danger" onclick="openSignatureModal()">📄 <span data-i18n="btn.exportPDF">Export PDF (with Signature)</span></button>
+            <button class="btn btn-outline" onclick="generateReport()">🔄 <span data-i18n="btn.refresh">Refresh</span></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📋 <span data-i18n="report.preview">Report Preview</span></div>
+          <div id="rpt-count" class="badge badge-accent">0 records</div>
+        </div>
+        <div class="table-container" style="max-height:450px;overflow-y:auto">
+          <table>
+            <thead id="rpt-thead"></thead>
+            <tbody id="rpt-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== ITEM HISTORY REPORT ==================== -->
+    <section id="page-itemhistory" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title">📜 Item History Report</div>
+          <div class="page-desc">Full stock movement history per item — start stock, receipts, issuances, end stock</div>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-success" onclick="exportItemHistoryExcel()">📊 Export Excel</button>
+          <button class="btn btn-danger" onclick="exportItemHistoryPDF()">📄 Export PDF</button>
+        </div>
+      </div>
+
+      <!-- Filter bar -->
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-body" style="padding:16px 20px">
+          <div class="form-row" style="align-items:flex-end">
+            <div class="form-group">
+              <label>Item</label>
+              <select id="ih-item" onchange="generateItemHistory()" style="min-width:220px">
+                <option value="">— All Items —</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Category</label>
+              <select id="ih-cat" onchange="filterIHItemDropdown()" style="min-width:150px">
+                <option value="">All Categories</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Start Date</label>
+              <input type="date" id="ih-start" onchange="generateItemHistory()">
+            </div>
+            <div class="form-group">
+              <label>End Date</label>
+              <input type="date" id="ih-end" onchange="generateItemHistory()">
+            </div>
+            <div class="form-group">
+              <button class="btn btn-primary" onclick="generateItemHistory()" style="width:100%">🔍 Generate</button>
+            </div>
+          </div>
+          <!-- Quick date presets -->
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+            <span style="font-size:11px;color:var(--text-muted);align-self:center;font-family:'DM Mono',monospace">QUICK:</span>
+            <button class="btn btn-sm btn-outline" onclick="setIHPreset(7)">Last 7d</button>
+            <button class="btn btn-sm btn-outline" onclick="setIHPreset(30)">Last 30d</button>
+            <button class="btn btn-sm btn-outline" onclick="setIHPreset(90)">Last 90d</button>
+            <button class="btn btn-sm btn-outline" onclick="setIHPreset('month')">This Month</button>
+            <button class="btn btn-sm btn-outline" onclick="setIHPreset('year')">This Year</button>
+            <button class="btn btn-sm btn-outline" onclick="setIHPreset('all')">All Time</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Summary stats row -->
+      <div id="ih-summary-row" style="display:none;margin-bottom:20px">
+        <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr))">
+          <div class="stat-card" style="--card-accent:var(--accent);--card-bg:var(--accent-glow)">
+            <div class="stat-icon">📦</div>
+            <div class="stat-info">
+              <div class="stat-value" id="ih-stat-items">0</div>
+              <div class="stat-label">Items</div>
+            </div>
+          </div>
+          <div class="stat-card" style="--card-accent:var(--text-muted);--card-bg:var(--bg-hover)">
+            <div class="stat-icon">🏁</div>
+            <div class="stat-info">
+              <div class="stat-value" id="ih-stat-start">0</div>
+              <div class="stat-label">Total Start Stock</div>
+            </div>
+          </div>
+          <div class="stat-card" style="--card-accent:var(--success);--card-bg:var(--success-bg)">
+            <div class="stat-icon">📥</div>
+            <div class="stat-info">
+              <div class="stat-value" id="ih-stat-in">0</div>
+              <div class="stat-label">Total Received</div>
+            </div>
+          </div>
+          <div class="stat-card" style="--card-accent:var(--danger);--card-bg:var(--danger-bg)">
+            <div class="stat-icon">📤</div>
+            <div class="stat-info">
+              <div class="stat-value" id="ih-stat-out">0</div>
+              <div class="stat-label">Total Issued</div>
+            </div>
+          </div>
+          <div class="stat-card" style="--card-accent:var(--warning);--card-bg:var(--warning-bg)">
+            <div class="stat-icon">🏷️</div>
+            <div class="stat-info">
+              <div class="stat-value" id="ih-stat-end">0</div>
+              <div class="stat-label">Total End Stock</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Report output — one card per item (or flat table for all-items) -->
+      <div id="ih-report-body">
+        <div class="empty-state">
+          <div class="empty-icon">📜</div>
+          <div>Select filters and click Generate to view the report</div>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- ==================== MODALS ==================== -->
+
+<!-- Forecast Export Modal -->
+<div class="modal-overlay" id="forecast-export-modal">
+  <div class="modal" style="max-width:820px">
+    <div class="modal-header">
+      <div class="modal-title" id="fc-export-modal-title">📊 Export Forecast Report</div>
+      <button class="close-btn" onclick="closeModal('forecast-export-modal')">✕</button>
+    </div>
+    <div class="modal-body" style="padding:20px 24px">
+
+      <!-- Format toggle -->
+      <div style="display:flex;gap:8px;margin-bottom:20px">
+        <button class="btn btn-sm" id="fc-fmt-excel" onclick="setFcExportFmt('excel')"
+          style="background:var(--success);color:#fff;flex:1">📊 Excel (.xlsx)</button>
+        <button class="btn btn-sm btn-outline" id="fc-fmt-pdf" onclick="setFcExportFmt('pdf')"
+          style="flex:1">📄 PDF</button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+
+        <!-- LEFT: Category filter -->
+        <div>
+          <div style="font-size:11px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);margin-bottom:8px">
+            Filter by Category
+          </div>
+          <div style="background:var(--bg-primary);border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden">
+            <div style="padding:8px 12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:12px;color:var(--text-secondary)">Select categories</span>
+              <div style="display:flex;gap:6px">
+                <button class="btn btn-sm btn-outline" style="padding:3px 8px;font-size:11px" onclick="fcSelectAllCats(true)">All</button>
+                <button class="btn btn-sm btn-outline" style="padding:3px 8px;font-size:11px" onclick="fcSelectAllCats(false)">None</button>
+              </div>
+            </div>
+            <div id="fc-cat-checklist" style="max-height:200px;overflow-y:auto;padding:8px 0"></div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Item filter -->
+        <div>
+          <div style="font-size:11px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);margin-bottom:8px">
+            Filter by Item
+          </div>
+          <div style="background:var(--bg-primary);border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden">
+            <div style="padding:8px 12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:8px">
+              <input type="text" id="fc-item-search" placeholder="Search items…" oninput="renderFcItemChecklist()"
+                style="flex:1;font-size:12px;padding:4px 8px;border-radius:4px;background:var(--bg-card)">
+              <div style="display:flex;gap:6px;flex-shrink:0">
+                <button class="btn btn-sm btn-outline" style="padding:3px 8px;font-size:11px" onclick="fcSelectAllItems(true)">All</button>
+                <button class="btn btn-sm btn-outline" style="padding:3px 8px;font-size:11px" onclick="fcSelectAllItems(false)">None</button>
+              </div>
+            </div>
+            <div id="fc-item-checklist" style="max-height:200px;overflow-y:auto;padding:8px 0"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Status filter row -->
+      <div style="margin-top:16px">
+        <div style="font-size:11px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);margin-bottom:8px">
+          Filter by Status
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;text-transform:none;letter-spacing:0;font-weight:500">
+            <input type="checkbox" id="fc-status-critical" checked style="width:15px;height:15px;accent-color:var(--danger)">
+            <span class="badge badge-danger">🔴 Critical</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;text-transform:none;letter-spacing:0;font-weight:500">
+            <input type="checkbox" id="fc-status-warning" checked style="width:15px;height:15px;accent-color:var(--warning)">
+            <span class="badge badge-warning">🟡 Warning</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;text-transform:none;letter-spacing:0;font-weight:500">
+            <input type="checkbox" id="fc-status-ok" checked style="width:15px;height:15px;accent-color:var(--success)">
+            <span class="badge badge-success">🟢 OK</span>
+          </label>
+          <div style="flex:1"></div>
+          <span id="fc-export-count" style="font-size:12px;font-family:'DM Mono',monospace;color:var(--text-muted);align-self:center">0 items selected</span>
+        </div>
+      </div>
+
+      <!-- Live preview mini-table -->
+      <div style="margin-top:16px">
+        <div style="font-size:11px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);margin-bottom:8px">
+          Preview (first 8 rows)
+        </div>
+        <div class="table-container" style="max-height:200px;overflow-y:auto">
+          <table id="fc-export-preview-table" style="font-size:11px">
+            <thead>
+              <tr>
+                <th>SKU</th><th>Item</th><th>Category</th>
+                <th>Stock</th><th>Avg/Day</th><th>Days Left</th>
+                <th>Safety Stock</th><th>Reorder Point</th><th>Suggest Qty</th><th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="fc-export-preview-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('forecast-export-modal')">Cancel</button>
+      <button class="btn btn-primary" id="fc-do-export-btn" onclick="executeForecastExport()">
+        📊 Export Excel
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Item Bulk Import Modal -->
+<div class="modal-overlay" id="item-import-modal">
+  <div class="modal" style="max-width:780px">
+    <div class="modal-header">
+      <div class="modal-title">📥 Bulk Import Items from Excel</div>
+      <button class="close-btn" onclick="closeModal('item-import-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Step indicator -->
+      <div class="step-indicator" style="margin-bottom:24px">
+        <div class="step active" id="import-step-1">
+          <div class="step-num">1</div>
+          <span style="font-size:13px">Download Template</span>
+        </div>
+        <div class="step-divider"></div>
+        <div class="step" id="import-step-2">
+          <div class="step-num">2</div>
+          <span style="font-size:13px">Upload & Preview</span>
+        </div>
+        <div class="step-divider"></div>
+        <div class="step" id="import-step-3">
+          <div class="step-num">3</div>
+          <span style="font-size:13px">Import</span>
+        </div>
+      </div>
+
+      <!-- Step 1: Template download + format guide -->
+      <div id="import-section-template">
+        <div class="alert alert-info" style="margin-bottom:16px">
+          ℹ️ Download the Excel template, fill in your items, then upload the file below. Existing SKUs will be <strong>updated</strong>; new SKUs will be <strong>added</strong>.
+        </div>
+
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header" style="padding:14px 18px">
+            <div class="card-title" style="font-size:14px">📋 Required Columns</div>
+          </div>
+          <div style="overflow-x:auto">
+            <table style="font-size:12px">
+              <thead>
+                <tr>
+                  <th>Column</th>
+                  <th>Format / Example</th>
+                  <th>Required</th>
+                  <th>Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td><strong>SKU</strong></td><td><span class="sku-tag">SKU-E001</span></td><td><span class="badge badge-danger">Yes</span></td><td>Unique identifier</td></tr>
+                <tr><td><strong>Name</strong></td><td>Cable Ties 100mm</td><td><span class="badge badge-danger">Yes</span></td><td>Item display name</td></tr>
+                <tr><td><strong>Category</strong></td><td>Electrical</td><td><span class="badge badge-warning">Optional</span></td><td>Must match existing category name</td></tr>
+                <tr><td><strong>Unit</strong></td><td>pcs</td><td><span class="badge badge-warning">Optional</span></td><td>Must match existing unit name</td></tr>
+                <tr><td><strong>Stock</strong></td><td>100</td><td><span class="badge badge-warning">Optional</span></td><td>Initial stock quantity (default: 0)</td></tr>
+                <tr><td><strong>MinStock</strong></td><td>20</td><td><span class="badge badge-warning">Optional</span></td><td>Minimum stock threshold (default: 0)</td></tr>
+                <tr><td><strong>Description</strong></td><td>Short notes about item</td><td><span class="badge badge-accent">No</span></td><td>Optional free text</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div style="margin-bottom:20px">
+          <div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.5px">Available Categories & Units in system:</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px" id="import-cat-chips"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap" id="import-unit-chips"></div>
+        </div>
+
+        <button class="btn btn-success" onclick="downloadItemTemplate()" style="width:100%">
+          📥 Download Item Import Template (.xlsx)
+        </button>
+      </div>
+
+      <hr class="section-divider">
+
+      <!-- Step 2: Upload -->
+      <div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:12px;color:var(--text-secondary);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.5px">Upload Excel File</div>
+
+        <label style="
+          display:flex;flex-direction:column;align-items:center;justify-content:center;
+          border:2px dashed var(--border-light);border-radius:var(--radius);
+          padding:32px 20px;cursor:pointer;transition:all var(--transition);
+          background:var(--bg-primary);gap:10px;margin-bottom:16px;
+          text-transform:none;letter-spacing:0;font-weight:400;font-size:14px;color:var(--text-secondary);
+        " id="item-import-dropzone"
+          ondragover="event.preventDefault();this.style.borderColor='var(--accent)';this.style.background='var(--accent-glow)'"
+          ondragleave="this.style.borderColor='';this.style.background=''"
+          ondrop="handleItemImportDrop(event)"
+        >
+          <span style="font-size:36px">📊</span>
+          <span style="font-size:14px;color:var(--text-primary);font-weight:600">Drop Excel file here, or click to browse</span>
+          <span style="font-size:12px">Supports .xlsx and .xls</span>
+          <input type="file" id="item-import-file" accept=".xlsx,.xls" onchange="previewItemImport()" style="display:none">
+        </label>
+
+        <div id="item-import-preview"></div>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('item-import-modal')">Cancel</button>
+      <button class="btn btn-primary" id="btn-do-import" onclick="executeItemImport()" disabled style="opacity:0.5;cursor:not-allowed">
+        📥 Import Items
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Item Modal -->
+<div class="modal-overlay" id="item-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="item-modal-title" data-i18n="modal.addItem">Add New Item</div>
+      <button class="close-btn" onclick="closeModal('item-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="item-edit-id">
+      <div class="form-grid">
+        <div class="form-row">
+          <div class="form-group">
+            <label data-i18n="field.sku">SKU / Item ID</label>
+            <input type="text" id="item-sku" placeholder="e.g. SKU-001">
+          </div>
+          <div class="form-group">
+            <label data-i18n="field.itemName">Item Name</label>
+            <input type="text" id="item-name" placeholder="Item name">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label data-i18n="col.category">Category</label>
+            <select id="item-category"></select>
+          </div>
+          <div class="form-group">
+            <label data-i18n="col.unit">Unit</label>
+            <select id="item-unit"></select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label data-i18n="col.stock">Initial Stock</label>
+            <input type="number" id="item-stock" min="0" placeholder="0">
+          </div>
+          <div class="form-group">
+            <label data-i18n="col.minStock">Minimum Stock</label>
+            <input type="number" id="item-min-stock" min="0" placeholder="0">
+          </div>
+        </div>
+        <div class="form-group">
+          <label data-i18n="field.desc">Description (optional)</label>
+          <textarea id="item-desc" placeholder="Item description..."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('item-modal')" data-i18n="btn.cancel">Cancel</button>
+      <button class="btn btn-primary" onclick="saveItem()" data-i18n="btn.save">Save Item</button>
+    </div>
+  </div>
+</div>
+
+<!-- Signature Modal -->
+<div class="modal-overlay" id="sig-modal">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <div class="modal-title" data-i18n="modal.signature">Digital Signature</div>
+      <button class="close-btn" onclick="closeModal('sig-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row" style="margin-bottom:16px">
+        <div class="form-group">
+          <label data-i18n="field.signerName">Signer Name</label>
+          <input type="text" id="sig-name" placeholder="Full name">
+        </div>
+        <div class="form-group">
+          <label data-i18n="field.signerRole">Position / Role</label>
+          <input type="text" id="sig-role" placeholder="e.g. Warehouse Manager">
+        </div>
+      </div>
+      <label style="display:block;margin-bottom:8px" data-i18n="field.drawSignature">Draw Your Signature Below:</label>
+      <canvas id="sig-canvas" width="500" height="160"></canvas>
+      <div class="btn-group" style="margin-top:10px">
+        <button class="btn btn-sm btn-outline" onclick="clearSignature()" data-i18n="btn.clearSig">Clear Signature</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('sig-modal')" data-i18n="btn.cancel">Cancel</button>
+      <button class="btn btn-danger" onclick="exportPDFWithSignature()">📄 <span data-i18n="btn.generatePDF">Generate PDF</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- Low Stock Modal -->
+<div class="modal-overlay" id="low-stock-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">⚠️ <span data-i18n="modal.lowStock">Low Stock Alert</span></div>
+      <button class="close-btn" onclick="closeModal('low-stock-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="low-stock-modal-content"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div id="toast-container"></div>
+
+<!-- ==================== JAVASCRIPT ==================== -->
+<script>
+// ─────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────
+let state = {
+  lang: 'en',
+  theme: 'dark',
+  items: [],
+  units: [],
+  categories: [],
+  receipts: [],
+  issuances: [],
+  forecasts: [],
+  bulkRows: [],
+  charts: {},
+  sigPad: { drawing: false, lastX: 0, lastY: 0 }
+};
+
+// Default data
+const defaultUnits = [
+  { id: 'u1', name: 'pcs', desc: 'Pieces' },
+  { id: 'u2', name: 'pack', desc: 'Package' },
+  { id: 'u3', name: 'box', desc: 'Box' },
+  { id: 'u4', name: 'kg', desc: 'Kilogram' },
+  { id: 'u5', name: 'ltr', desc: 'Liter' },
+  { id: 'u6', name: 'roll', desc: 'Roll' }
+];
+
+const defaultCategories = [
+  { id: 'c1', name: 'Electrical', color: '#4f8ef7' },
+  { id: 'c2', name: 'Mechanical', color: '#36d399' },
+  { id: 'c3', name: 'Consumables', color: '#fbbd23' },
+  { id: 'c4', name: 'Safety', color: '#f87272' },
+  { id: 'c5', name: 'Tools', color: '#a78bfa' }
+];
+
+const defaultItems = [
+  { id: 'i1', sku: 'SKU-E001', name: 'Cable Ties 100mm', category: 'c1', unit: 'u1', stock: 500, minStock: 100, desc: '' },
+  { id: 'i2', sku: 'SKU-E002', name: 'Circuit Breaker 20A', category: 'c1', unit: 'u1', stock: 18, minStock: 20, desc: '' },
+  { id: 'i3', sku: 'SKU-M001', name: 'Lubricant Oil 1L', category: 'c4', unit: 'u5', stock: 45, minStock: 30, desc: '' },
+  { id: 'i4', sku: 'SKU-C001', name: 'Safety Gloves M', category: 'c4', unit: 'u1', stock: 8, minStock: 50, desc: '' },
+  { id: 'i5', sku: 'SKU-C002', name: 'Duct Tape 48mm', category: 'c3', unit: 'u1', stock: 120, minStock: 40, desc: '' },
+  { id: 'i6', sku: 'SKU-T001', name: 'Adjustable Wrench 10"', category: 'c5', unit: 'u1', stock: 12, minStock: 5, desc: '' },
+  { id: 'i7', sku: 'SKU-M002', name: 'Hex Bolt M8×40', category: 'c2', unit: 'u1', stock: 250, minStock: 100, desc: '' },
+  { id: 'i8', sku: 'SKU-C003', name: 'WD-40 450ml', category: 'c3', unit: 'u1', stock: 6, minStock: 15, desc: '' }
+];
+
+// ─────────────────────────────────────────────
+// I18N
+// ─────────────────────────────────────────────
+const i18n = {
+  en: {
+    'nav.overview':'Overview','nav.dashboard':'Dashboard','nav.master':'Master Data',
+    'nav.items':'Item Master','nav.units':'Units & Categories','nav.transactions':'Transactions',
+    'nav.receipt':'Goods Receipt','nav.issuance':'Goods Issuance','nav.bulk':'Bulk Input',
+    'nav.analytics':'Analytics','nav.forecast':'Forecasting','nav.reports':'Reports & Export',
+    'page.dashboard':'Dashboard','page.dashboard.sub':'Warehouse Inventory Overview',
+    'page.items':'Item Master','page.items.desc':'Manage all inventory items, SKUs, and stock levels',
+    'page.units':'Units & Categories','page.units.desc':'Configure measurement units and item categories',
+    'page.receipt':'Goods Receipt (Barang Masuk)','page.receipt.desc':'Record incoming goods with MRO, PO and delivery details',
+    'page.issuance':'Goods Issuance (Barang Keluar)','page.issuance.desc':'Record outgoing goods with mandatory purpose/reason',
+    'page.bulk':'Bulk Input','page.bulk.desc':'Upload Excel or use batch entry grid for multiple transactions',
+    'page.forecast':'Inventory Forecasting','page.forecast.desc':'Smart reorder suggestions based on historical usage (14–30 day lead time)',
+    'page.reports':'Reports & Export','page.reports.desc':'Generate, filter, and export inventory reports with digital signature',
+    'btn.light':'Light','btn.dark':'Dark','btn.addItem':'Add Item','btn.viewAll':'View All',
+    'btn.exportExcel':'Excel','btn.exportPDF':'Export PDF','btn.cancel':'Cancel','btn.save':'Save Item',
+    'btn.clear':'Clear','btn.submitReceipt':'Submit Receipt','btn.submitIssuance':'Submit Issuance',
+    'btn.bulkInput':'Bulk Input','btn.addRow':'Add Row','btn.submitAll':'Submit All',
+    'btn.downloadTemplate':'Download Template','btn.refresh':'Refresh','btn.recalculate':'Recalculate',
+    'btn.clearSig':'Clear Signature','btn.generatePDF':'Generate PDF','btn.lowstock':'Low Stock',
+    'stat.totalItems':'Total Items','stat.goodsIn':'Goods Receipts','stat.goodsOut':'Goods Issued',
+    'stat.lowStock':'Low Stock Items','stat.needsReorder':'Needs reorder','stat.categories':'Categories',
+    'stat.units':'Active units',
+    'chart.topSelling':'Top-Selling Items (Issuance)','chart.stockByCategory':'Stock by Category',
+    'chart.stockMovement':'Stock Movement','chart.lowStockItems':'Low Stock Items',
+    'period.7d':'Last 7 Days','period.30d':'Last 30 Days','period.90d':'Last 90 Days',
+    'col.sku':'SKU / ID','col.name':'Item Name','col.category':'Category','col.stock':'Stock',
+    'col.minStock':'Min Stock','col.unit':'Unit','col.status':'Status','col.actions':'Actions',
+    'col.date':'Date','col.item':'Item','col.qty':'Qty','col.desc':'Description',
+    'col.color':'Color','col.purpose':'Purpose','col.notes':'Notes','col.column':'Column',
+    'col.format':'Format','col.required':'Required','col.currentStock':'Current Stock',
+    'filter.allCategories':'All Categories','filter.allStock':'All Stock Status',
+    'filter.lowStock':'Low Stock','filter.ok':'OK Stock','filter.all':'All Items',
+    'section.units':'Units of Measurement','section.categories':'Item Categories',
+    'section.recentReceipts':'Recent Receipts','section.recentIssuances':'Recent Issuances',
+    'form.receiptTitle':'New Goods Receipt','form.issuanceTitle':'New Goods Issuance',
+    'field.mro':'MRO Number','field.po':'PO Number','field.delivery':'Delivery Note No.',
+    'field.origin':'Origin / Sender','field.item':'Item','field.qty':'Quantity',
+    'field.unit':'Unit','field.date':'Date','field.notes':'Notes',
+    'field.purpose':'Purpose / Reason of Retrieval','field.requestedBy':'Requested By',
+    'field.availstock':'Available Stock','field.sku':'SKU / Item ID','field.itemName':'Item Name',
+    'field.desc':'Description (optional)','field.reportType':'Report Type',
+    'field.startDate':'Start Date','field.endDate':'End Date','field.category':'Category',
+    'field.signerName':'Signer Name','field.signerRole':'Position / Role',
+    'field.drawSignature':'Draw Your Signature Below:',
+    'sel.selectItem':'— Select Item —',
+    'tab.excelUpload':'📊 Excel Upload','tab.batchGrid':'⚡ Batch Entry Grid',
+    'bulk.uploadExcel':'Upload Excel File','bulk.uploadHint':'Download the template first, fill in your data, then upload.',
+    'bulk.selectFile':'Select Excel file (.xlsx, .xls):','bulk.format':'File Format Guide',
+    'bulk.batchEntry':'Batch Entry Grid',
+    'type.in':'IN (Receipt)','type.out':'OUT (Issuance)',
+    'rpt.all':'All Transactions','rpt.receipts':'Goods Receipts Only',
+    'rpt.issuances':'Goods Issuances Only','rpt.stock':'Current Stock Snapshot',
+    'report.filters':'Report Filters','report.preview':'Report Preview',
+    'forecast.info':'Calculations use average daily consumption over the last 30 days. Reorder Point = Avg Daily Usage × Max Lead Time (30d). Safety Stock = Avg Daily Usage × (Max Lead Time − Min Lead Time).',
+    'forecast.summary':'Forecast Summary','forecast.params':'Lead Time Parameters',
+    'forecast.critical':'Critical','forecast.warning':'Warning',
+    'forecast.minLead':'Min Lead Time (days)','forecast.maxLead':'Max Lead Time (days)',
+    'forecast.table':'Reorder Recommendations','forecast.avgDaily':'Avg Daily Use',
+    'forecast.daysLeft':'Days Left','forecast.safetyStock':'Safety Stock',
+    'forecast.reorderPoint':'Reorder Point','forecast.suggestQty':'Suggest Order Qty',
+    'modal.addItem':'Add New Item','modal.editItem':'Edit Item',
+    'modal.signature':'Digital Signature','modal.lowStock':'Low Stock Alert',
+    'empty.items':'No items yet. Add your first item!',
+    'empty.transactions':'No transactions yet.',
+    'page.itemhistory':'Item History Report',
+    'page.itemhistory.sub':'Full stock movement per item with date range filter'
+  },
+  id: {
+    'nav.overview':'Ikhtisar','nav.dashboard':'Dasbor','nav.master':'Data Master',
+    'nav.items':'Master Barang','nav.units':'Satuan & Kategori','nav.transactions':'Transaksi',
+    'nav.receipt':'Barang Masuk','nav.issuance':'Barang Keluar','nav.bulk':'Input Massal',
+    'nav.analytics':'Analitik','nav.forecast':'Peramalan','nav.reports':'Laporan & Ekspor',
+    'page.dashboard':'Dasbor','page.dashboard.sub':'Ikhtisar Inventaris Gudang',
+    'page.items':'Master Barang','page.items.desc':'Kelola semua item inventaris, SKU, dan level stok',
+    'page.units':'Satuan & Kategori','page.units.desc':'Konfigurasi satuan pengukuran dan kategori item',
+    'page.receipt':'Barang Masuk','page.receipt.desc':'Catat penerimaan barang dengan nomor MRO, PO, dan surat jalan',
+    'page.issuance':'Barang Keluar','page.issuance.desc':'Catat pengeluaran barang dengan tujuan/alasan wajib',
+    'page.bulk':'Input Massal','page.bulk.desc':'Unggah Excel atau gunakan grid entri batch untuk banyak transaksi',
+    'page.forecast':'Peramalan Inventaris','page.forecast.desc':'Saran pemesanan ulang berdasarkan historis pemakaian (lead time 14–30 hari)',
+    'page.reports':'Laporan & Ekspor','page.reports.desc':'Buat, filter, dan ekspor laporan inventaris dengan tanda tangan digital',
+    'btn.light':'Terang','btn.dark':'Gelap','btn.addItem':'Tambah Barang','btn.viewAll':'Lihat Semua',
+    'btn.exportExcel':'Excel','btn.exportPDF':'Ekspor PDF','btn.cancel':'Batal','btn.save':'Simpan',
+    'btn.clear':'Hapus','btn.submitReceipt':'Simpan Penerimaan','btn.submitIssuance':'Simpan Pengeluaran',
+    'btn.bulkInput':'Input Massal','btn.addRow':'Tambah Baris','btn.submitAll':'Kirim Semua',
+    'btn.downloadTemplate':'Unduh Template','btn.refresh':'Refresh','btn.recalculate':'Hitung Ulang',
+    'btn.clearSig':'Hapus Tanda Tangan','btn.generatePDF':'Buat PDF','btn.lowstock':'Stok Rendah',
+    'stat.totalItems':'Total Barang','stat.goodsIn':'Penerimaan Barang','stat.goodsOut':'Pengeluaran Barang',
+    'stat.lowStock':'Stok Rendah','stat.needsReorder':'Perlu pemesanan ulang','stat.categories':'Kategori',
+    'stat.units':'Satuan aktif',
+    'chart.topSelling':'Barang Paling Banyak Keluar','chart.stockByCategory':'Stok per Kategori',
+    'chart.stockMovement':'Pergerakan Stok','chart.lowStockItems':'Barang Stok Rendah',
+    'period.7d':'7 Hari Terakhir','period.30d':'30 Hari Terakhir','period.90d':'90 Hari Terakhir',
+    'col.sku':'SKU / ID','col.name':'Nama Barang','col.category':'Kategori','col.stock':'Stok',
+    'col.minStock':'Stok Min','col.unit':'Satuan','col.status':'Status','col.actions':'Aksi',
+    'col.date':'Tanggal','col.item':'Barang','col.qty':'Jumlah','col.desc':'Keterangan',
+    'col.color':'Warna','col.purpose':'Tujuan','col.notes':'Catatan','col.column':'Kolom',
+    'col.format':'Format','col.required':'Wajib','col.currentStock':'Stok Saat Ini',
+    'filter.allCategories':'Semua Kategori','filter.allStock':'Semua Status Stok',
+    'filter.lowStock':'Stok Rendah','filter.ok':'Stok OK','filter.all':'Semua Barang',
+    'section.units':'Satuan Pengukuran','section.categories':'Kategori Barang',
+    'section.recentReceipts':'Penerimaan Terbaru','section.recentIssuances':'Pengeluaran Terbaru',
+    'form.receiptTitle':'Penerimaan Barang Baru','form.issuanceTitle':'Pengeluaran Barang Baru',
+    'field.mro':'Nomor MRO','field.po':'Nomor PO','field.delivery':'Nomor Surat Jalan',
+    'field.origin':'Asal / Pengirim','field.item':'Barang','field.qty':'Jumlah',
+    'field.unit':'Satuan','field.date':'Tanggal','field.notes':'Catatan',
+    'field.purpose':'Tujuan / Alasan Pengambilan','field.requestedBy':'Diminta Oleh',
+    'field.availstock':'Stok Tersedia','field.sku':'SKU / ID Barang','field.itemName':'Nama Barang',
+    'field.desc':'Keterangan (opsional)','field.reportType':'Jenis Laporan',
+    'field.startDate':'Tanggal Mulai','field.endDate':'Tanggal Selesai','field.category':'Kategori',
+    'field.signerName':'Nama Penandatangan','field.signerRole':'Jabatan / Peran',
+    'field.drawSignature':'Gambar Tanda Tangan Anda:',
+    'sel.selectItem':'— Pilih Barang —',
+    'tab.excelUpload':'📊 Unggah Excel','tab.batchGrid':'⚡ Grid Entri Batch',
+    'bulk.uploadExcel':'Unggah File Excel','bulk.uploadHint':'Unduh template terlebih dahulu, isi data, lalu unggah.',
+    'bulk.selectFile':'Pilih file Excel (.xlsx, .xls):','bulk.format':'Panduan Format File',
+    'bulk.batchEntry':'Grid Entri Batch',
+    'type.in':'MASUK (Penerimaan)','type.out':'KELUAR (Pengeluaran)',
+    'rpt.all':'Semua Transaksi','rpt.receipts':'Penerimaan Barang Saja',
+    'rpt.issuances':'Pengeluaran Barang Saja','rpt.stock':'Snapshot Stok Saat Ini',
+    'report.filters':'Filter Laporan','report.preview':'Pratinjau Laporan',
+    'forecast.info':'Perhitungan menggunakan rata-rata konsumsi harian 30 hari terakhir. Titik Pemesanan = Rata-rata Harian × Lead Time Maks (30 hari). Safety Stock = Rata-rata Harian × (Lead Time Maks − Min).',
+    'forecast.summary':'Ringkasan Peramalan','forecast.params':'Parameter Lead Time',
+    'forecast.critical':'Kritis','forecast.warning':'Peringatan',
+    'forecast.minLead':'Lead Time Min (hari)','forecast.maxLead':'Lead Time Maks (hari)',
+    'forecast.table':'Rekomendasi Pemesanan Ulang','forecast.avgDaily':'Rata-rata Harian',
+    'forecast.daysLeft':'Sisa Hari','forecast.safetyStock':'Safety Stock',
+    'forecast.reorderPoint':'Titik Pemesanan','forecast.suggestQty':'Saran Jumlah Pesan',
+    'modal.addItem':'Tambah Barang Baru','modal.editItem':'Edit Barang',
+    'modal.signature':'Tanda Tangan Digital','modal.lowStock':'Peringatan Stok Rendah',
+    'empty.items':'Belum ada barang. Tambahkan barang pertama Anda!',
+    'empty.transactions':'Belum ada transaksi.'
+  }
+};
+
+function t(key) {
+  return i18n[state.lang][key] || i18n['en'][key] || key;
+}
+
+function applyI18n() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    el.textContent = t(key);
+  });
+}
+
+// ─────────────────────────────────────────────
+// THEME & LANG TOGGLE
+// ─────────────────────────────────────────────
+function toggleTheme() {
+  state.theme = state.theme === 'dark' ? 'light' : 'dark';
+  document.body.setAttribute('data-theme', state.theme);
+  document.getElementById('theme-icon').textContent = state.theme === 'dark' ? '☀️' : '🌙';
+  document.getElementById('theme-label').textContent = state.theme === 'dark' ? t('btn.light') : t('btn.dark');
+  renderCharts();
+}
+
+function toggleLang() {
+  state.lang = state.lang === 'en' ? 'id' : 'en';
+  document.getElementById('lang-label').textContent = state.lang === 'en' ? 'ID' : 'EN';
+  applyI18n();
+  refreshAllDropdowns();
+  renderItemTable();
+  renderUnitsTables();
+  renderForecastTable();
+  generateReport();
+  renderCharts();
+}
+
+// ─────────────────────────────────────────────
+// NAVIGATION
+// ─────────────────────────────────────────────
+const pageMap = {
+  'dashboard': { title: 'page.dashboard', sub: 'page.dashboard.sub' },
+  'items': { title: 'page.items', sub: 'page.items.desc' },
+  'units': { title: 'page.units', sub: 'page.units.desc' },
+  'receipt': { title: 'page.receipt', sub: 'page.receipt.desc' },
+  'issuance': { title: 'page.issuance', sub: 'page.issuance.desc' },
+  'bulk': { title: 'page.bulk', sub: 'page.bulk.desc' },
+  'forecast': { title: 'page.forecast', sub: 'page.forecast.desc' },
+  'reports': { title: 'page.reports', sub: 'page.reports.desc' },
+  'itemhistory': { title: 'page.itemhistory', sub: 'page.itemhistory.sub' }
+};
+
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+  const target = document.getElementById('page-' + page);
+  if (target) target.classList.add('active');
+
+  const navItem = document.querySelector(`.nav-item[onclick="navigate('${page}')"]`);
+  if (navItem) navItem.classList.add('active');
+
+  const info = pageMap[page] || pageMap['dashboard'];
+  document.getElementById('page-title').textContent = t(info.title);
+  document.querySelector('#header .header-subtitle').textContent = t(info.sub);
+
+  // On-navigate actions
+  if (page === 'dashboard') { updateDashStats(); renderCharts(); }
+  if (page === 'items') renderItemTable();
+  if (page === 'units') renderUnitsTables();
+  if (page === 'receipt' || page === 'issuance') { populateItemDropdowns(); }
+  if (page === 'bulk') { populateBulkDropdowns(); if (state.bulkRows.length === 0) addBulkRow(); }
+  if (page === 'forecast') { calcForecasts(); }
+  if (page === 'reports') { populateReportFilters(); generateReport(); }
+  if (page === 'itemhistory') { initItemHistory(); }
+}
+
+// ─────────────────────────────────────────────
+// DATE
+// ─────────────────────────────────────────────
+function updateDate() {
+  const now = new Date();
+  document.getElementById('current-date').textContent =
+    now.toLocaleDateString('en-GB', { weekday:'short', year:'numeric', month:'short', day:'numeric' });
+}
+
+// ─────────────────────────────────────────────
+// ITEMS
+// ─────────────────────────────────────────────
+function openItemModal(id = null) {
+  document.getElementById('item-edit-id').value = id || '';
+  document.getElementById('item-modal-title').textContent = id ? t('modal.editItem') : t('modal.addItem');
+
+  // Populate dropdowns
+  const catSel = document.getElementById('item-category');
+  const unitSel = document.getElementById('item-unit');
+  catSel.innerHTML = state.categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  unitSel.innerHTML = state.units.map(u => `<option value="${u.id}">${u.name}</option>`).join('');
+
+  if (id) {
+    const item = state.items.find(i => i.id === id);
+    if (item) {
+      document.getElementById('item-sku').value = item.sku;
+      document.getElementById('item-name').value = item.name;
+      document.getElementById('item-category').value = item.category;
+      document.getElementById('item-unit').value = item.unit;
+      document.getElementById('item-stock').value = item.stock;
+      document.getElementById('item-min-stock').value = item.minStock;
+      document.getElementById('item-desc').value = item.desc || '';
+    }
+  } else {
+    ['item-sku','item-name','item-stock','item-min-stock','item-desc'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('item-stock').value = 0;
+    document.getElementById('item-min-stock').value = 0;
+  }
+  openModal('item-modal');
+}
+
+function saveItem() {
+  const editId = document.getElementById('item-edit-id').value;
+  const sku = document.getElementById('item-sku').value.trim();
+  const name = document.getElementById('item-name').value.trim();
+
+  if (!sku || !name) { toast('SKU and Name are required', 'error'); return; }
+
+  const data = {
+    sku, name,
+    category: document.getElementById('item-category').value,
+    unit: document.getElementById('item-unit').value,
+    stock: parseInt(document.getElementById('item-stock').value) || 0,
+    minStock: parseInt(document.getElementById('item-min-stock').value) || 0,
+    desc: document.getElementById('item-desc').value
+  };
+
+  if (editId) {
+    const idx = state.items.findIndex(i => i.id === editId);
+    if (idx !== -1) state.items[idx] = { ...state.items[idx], ...data };
+    toast('Item updated!', 'success');
+  } else {
+    // Check duplicate SKU
+    if (state.items.find(i => i.sku === sku)) { toast('SKU already exists!', 'error'); return; }
+    state.items.push({ id: 'i' + Date.now(), ...data });
+    toast('Item added!', 'success');
+  }
+
+  closeModal('item-modal');
+  renderItemTable();
+  refreshAllDropdowns();
+  updateDashStats();
+}
+
+function deleteItem(id) {
+  if (!confirm('Delete this item?')) return;
+  state.items = state.items.filter(i => i.id !== id);
+  renderItemTable();
+  refreshAllDropdowns();
+  updateDashStats();
+  toast('Item deleted', 'warning');
+}
+
+function renderItemTable() {
+  const search = document.getElementById('item-search')?.value.toLowerCase() || '';
+  const catFilter = document.getElementById('item-cat-filter')?.value || '';
+  const stockFilter = document.getElementById('item-stock-filter')?.value || '';
+
+  let items = state.items.filter(item => {
+    const matchSearch = !search || item.sku.toLowerCase().includes(search) || item.name.toLowerCase().includes(search);
+    const matchCat = !catFilter || item.category === catFilter;
+    const matchStock = !stockFilter ||
+      (stockFilter === 'low' && item.stock <= item.minStock) ||
+      (stockFilter === 'ok' && item.stock > item.minStock);
+    return matchSearch && matchCat && matchStock;
+  });
+
+  const tbody = document.getElementById('item-table-body');
+  if (!items.length) {
+    tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">📦</div><div>${t('empty.items')}</div></div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = items.map(item => {
+    const cat = state.categories.find(c => c.id === item.category);
+    const unit = state.units.find(u => u.id === item.unit);
+    const pct = item.minStock > 0 ? Math.min(100, (item.stock / item.minStock) * 100) : 100;
+    const isLow = item.stock <= item.minStock;
+    const color = isLow ? 'var(--danger)' : pct < 150 ? 'var(--warning)' : 'var(--success)';
+
+    return `<tr>
+      <td><span class="sku-tag">${item.sku}</span></td>
+      <td><strong>${item.name}</strong>${item.desc ? `<br><small style="color:var(--text-muted)">${item.desc}</small>` : ''}</td>
+      <td>${cat ? `<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:${cat.color}"></span>${cat.name}</span>` : '—'}</td>
+      <td>
+        <div class="stock-indicator">
+          <strong>${item.stock}</strong>
+          <div class="stock-bar"><div class="stock-fill" style="width:${Math.min(pct,100)}%;background:${color}"></div></div>
+        </div>
+      </td>
+      <td>${item.minStock}</td>
+      <td>${unit ? unit.name : '—'}</td>
+      <td>${isLow ? `<span class="badge badge-danger">⚠ Low</span>` : `<span class="badge badge-success">✓ OK</span>`}</td>
+      <td>
+        <div class="btn-group">
+          <button class="btn btn-sm btn-outline btn-icon" onclick="openItemModal('${item.id}')" title="Edit">✏️</button>
+          <button class="btn btn-sm btn-outline btn-icon" onclick="deleteItem('${item.id}')" title="Delete">🗑️</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  // Update category filter options
+  const catSel = document.getElementById('item-cat-filter');
+  if (catSel) {
+    const current = catSel.value;
+    catSel.innerHTML = `<option value="">${t('filter.allCategories')}</option>` +
+      state.categories.map(c => `<option value="${c.id}" ${c.id === current ? 'selected':''}>${c.name}</option>`).join('');
+  }
+}
+
+// ─────────────────────────────────────────────
+// UNITS & CATEGORIES
+// ─────────────────────────────────────────────
+function addUnit() {
+  const name = document.getElementById('new-unit-name').value.trim();
+  const desc = document.getElementById('new-unit-desc').value.trim();
+  if (!name) { toast('Unit name required', 'error'); return; }
+  if (state.units.find(u => u.name === name)) { toast('Unit already exists', 'error'); return; }
+  state.units.push({ id: 'u' + Date.now(), name, desc });
+  document.getElementById('new-unit-name').value = '';
+  document.getElementById('new-unit-desc').value = '';
+  renderUnitsTables();
+  refreshAllDropdowns();
+  toast('Unit added!', 'success');
+}
+
+function deleteUnit(id) {
+  if (state.items.find(i => i.unit === id)) { toast('Cannot delete — unit in use by items', 'error'); return; }
+  state.units = state.units.filter(u => u.id !== id);
+  renderUnitsTables();
+  refreshAllDropdowns();
+  toast('Unit deleted', 'warning');
+}
+
+function addCategory() {
+  const name = document.getElementById('new-cat-name').value.trim();
+  const color = document.getElementById('new-cat-color').value;
+  if (!name) { toast('Category name required', 'error'); return; }
+  state.categories.push({ id: 'c' + Date.now(), name, color });
+  document.getElementById('new-cat-name').value = '';
+  renderUnitsTables();
+  refreshAllDropdowns();
+  toast('Category added!', 'success');
+}
+
+function deleteCategory(id) {
+  if (state.items.find(i => i.category === id)) { toast('Cannot delete — category in use by items', 'error'); return; }
+  state.categories = state.categories.filter(c => c.id !== id);
+  renderUnitsTables();
+  refreshAllDropdowns();
+  toast('Category deleted', 'warning');
+}
+
+function renderUnitsTables() {
+  const ub = document.getElementById('units-table-body');
+  ub.innerHTML = state.units.map(u => `<tr>
+    <td><strong>${u.name}</strong></td>
+    <td style="color:var(--text-secondary)">${u.desc || '—'}</td>
+    <td><button class="btn btn-sm btn-outline btn-icon" onclick="deleteUnit('${u.id}')">🗑️</button></td>
+  </tr>`).join('') || `<tr><td colspan="3" style="color:var(--text-muted);text-align:center;padding:16px">No units yet</td></tr>`;
+
+  const cb = document.getElementById('cats-table-body');
+  cb.innerHTML = state.categories.map(c => `<tr>
+    <td><span style="display:inline-flex;align-items:center;gap:8px">
+      <span style="width:12px;height:12px;border-radius:50%;background:${c.color}"></span><strong>${c.name}</strong>
+    </span></td>
+    <td><code style="font-family:'DM Mono',monospace;font-size:11px">${c.color}</code></td>
+    <td><button class="btn btn-sm btn-outline btn-icon" onclick="deleteCategory('${c.id}')">🗑️</button></td>
+  </tr>`).join('') || `<tr><td colspan="3" style="color:var(--text-muted);text-align:center;padding:16px">No categories yet</td></tr>`;
+}
+
+function refreshAllDropdowns() {
+  populateItemDropdowns();
+  populateBulkDropdowns();
+
+  // Report cat filter
+  const rptCat = document.getElementById('rpt-cat');
+  if (rptCat) {
+    const cur = rptCat.value;
+    rptCat.innerHTML = `<option value="">${t('filter.allCategories')}</option>` +
+      state.categories.map(c => `<option value="${c.id}" ${c.id===cur?'selected':''}>${c.name}</option>`).join('');
+  }
+  renderItemTable();
+}
+
+// ─────────────────────────────────────────────
+// GOODS RECEIPT
+// ─────────────────────────────────────────────
+function populateItemDropdowns() {
+  ['r-item','i-item'].forEach(selId => {
+    const sel = document.getElementById(selId);
+    if (!sel) return;
+    const cur = sel.value;
+    sel.innerHTML = `<option value="">${t('sel.selectItem')}</option>` +
+      state.items.map(i => `<option value="${i.id}" ${i.id===cur?'selected':''}>${i.sku} — ${i.name} (${getUnit(i.unit)})</option>`).join('');
+    sel.value = cur;
+  });
+
+  const today = new Date().toISOString().split('T')[0];
+  ['r-date','i-date'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && !el.value) el.value = today;
+  });
+}
+
+function autofillReceiptUnit() {
+  const itemId = document.getElementById('r-item').value;
+  const item = state.items.find(i => i.id === itemId);
+  document.getElementById('r-unit').value = item ? getUnit(item.unit) : '';
+}
+
+function autofillIssuanceInfo() {
+  const itemId = document.getElementById('i-item').value;
+  const item = state.items.find(i => i.id === itemId);
+  document.getElementById('i-unit').value = item ? getUnit(item.unit) : '';
+  document.getElementById('i-avail').value = item ? `${item.stock} ${getUnit(item.unit)}` : '—';
+}
+
+function getUnit(unitId) {
+  const u = state.units.find(u => u.id === unitId);
+  return u ? u.name : unitId;
+}
+
+function getCat(catId) {
+  const c = state.categories.find(c => c.id === catId);
+  return c ? c.name : catId;
+}
+
+function submitReceipt() {
+  const itemId = document.getElementById('r-item').value;
+  const qty = parseInt(document.getElementById('r-qty').value);
+  const mro = document.getElementById('r-mro').value.trim();
+  const date = document.getElementById('r-date').value;
+
+  if (!itemId) { toast('Please select an item', 'error'); return; }
+  if (!qty || qty <= 0) { toast('Quantity must be > 0', 'error'); return; }
+  if (!date) { toast('Date is required', 'error'); return; }
+
+  const record = {
+    id: 'r' + Date.now(),
+    type: 'IN',
+    itemId, qty, date,
+    mro: mro || 'N/A',
+    po: document.getElementById('r-po').value.trim(),
+    dn: document.getElementById('r-dn').value.trim(),
+    origin: document.getElementById('r-origin').value.trim(),
+    notes: document.getElementById('r-notes').value.trim()
+  };
+
+  // Update stock
+  const item = state.items.find(i => i.id === itemId);
+  if (item) item.stock += qty;
+
+  state.receipts.push(record);
+  clearReceiptForm();
+  renderReceiptLog();
+  updateDashStats();
+  renderCharts();
+  toast(`Receipt recorded: +${qty} ${getUnit(item?.unit)}`, 'success');
+}
+
+function clearReceiptForm() {
+  ['r-mro','r-po','r-dn','r-origin','r-qty','r-unit','r-notes'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('r-item').value = '';
+}
+
+function renderReceiptLog() {
+  const tbody = document.getElementById('receipt-log-body');
+  if (!tbody) return;
+  const rows = [...state.receipts].reverse().slice(0, 30);
+  tbody.innerHTML = rows.length ? rows.map(r => {
+    const item = state.items.find(i => i.id === r.itemId);
+    return `<tr>
+      <td style="white-space:nowrap">${r.date}</td>
+      <td>${item ? item.name : '?'}</td>
+      <td><span class="badge badge-success">+${r.qty}</span></td>
+      <td><span class="sku-tag">${r.mro}</span></td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-muted)">${t('empty.transactions')}</td></tr>`;
+}
+
+// ─────────────────────────────────────────────
+// GOODS ISSUANCE
+// ─────────────────────────────────────────────
+function submitIssuance() {
+  const itemId = document.getElementById('i-item').value;
+  const qty = parseInt(document.getElementById('i-qty').value);
+  const purpose = document.getElementById('i-purpose').value.trim();
+  const date = document.getElementById('i-date').value;
+
+  if (!itemId) { toast('Please select an item', 'error'); return; }
+  if (!qty || qty <= 0) { toast('Quantity must be > 0', 'error'); return; }
+  if (!purpose) { toast('Purpose/Reason is mandatory!', 'error'); return; }
+  if (!date) { toast('Date is required', 'error'); return; }
+
+  const item = state.items.find(i => i.id === itemId);
+  if (item && item.stock < qty) {
+    toast(`Insufficient stock! Available: ${item.stock}`, 'error');
+    return;
+  }
+
+  const record = {
+    id: 'is' + Date.now(),
+    type: 'OUT',
+    itemId, qty, date, purpose,
+    requester: document.getElementById('i-requester').value.trim(),
+    notes: document.getElementById('i-notes').value.trim()
+  };
+
+  if (item) item.stock -= qty;
+  state.issuances.push(record);
+  clearIssuanceForm();
+  renderIssuanceLog();
+  updateDashStats();
+  renderCharts();
+  toast(`Issuance recorded: −${qty} ${getUnit(item?.unit)}`, 'success');
+}
+
+function clearIssuanceForm() {
+  ['i-qty','i-unit','i-avail','i-purpose','i-requester','i-notes'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('i-item').value = '';
+}
+
+function renderIssuanceLog() {
+  const tbody = document.getElementById('issuance-log-body');
+  if (!tbody) return;
+  const rows = [...state.issuances].reverse().slice(0, 30);
+  tbody.innerHTML = rows.length ? rows.map(r => {
+    const item = state.items.find(i => i.id === r.itemId);
+    return `<tr>
+      <td style="white-space:nowrap">${r.date}</td>
+      <td>${item ? item.name : '?'}</td>
+      <td><span class="badge badge-danger">−${r.qty}</span></td>
+      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.purpose}">${r.purpose}</td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-muted)">${t('empty.transactions')}</td></tr>`;
+}
+
+// ─────────────────────────────────────────────
+// BULK INPUT
+// ─────────────────────────────────────────────
+function switchBulkTab(tab) {
+  document.querySelectorAll('#page-bulk .tab').forEach((t,i) => {
+    t.classList.toggle('active', (i===0 && tab==='excel') || (i===1 && tab==='grid'));
+  });
+  document.getElementById('bulk-tab-excel').classList.toggle('active', tab==='excel');
+  document.getElementById('bulk-tab-grid').classList.toggle('active', tab==='grid');
+}
+
+function populateBulkDropdowns() {
+  const rows = document.querySelectorAll('#bulk-grid-body tr');
+  rows.forEach(row => {
+    const sel = row.querySelector('.bulk-item-sel');
+    if (!sel) return;
+    const cur = sel.value;
+    sel.innerHTML = `<option value="">${t('sel.selectItem')}</option>` +
+      state.items.map(i => `<option value="${i.id}" ${i.id===cur?'selected':''}>${i.sku} — ${i.name}</option>`).join('');
+    sel.value = cur;
+  });
+}
+
+let bulkRowCounter = 0;
+function addBulkRow() {
+  const idx = ++bulkRowCounter;
+  const today = new Date().toISOString().split('T')[0];
+  const tbody = document.getElementById('bulk-grid-body');
+  const tr = document.createElement('tr');
+  tr.id = 'bulk-row-' + idx;
+  tr.innerHTML = `
+    <td style="text-align:center;color:var(--text-muted);font-family:'DM Mono',monospace;font-size:12px">${idx}</td>
+    <td><input type="date" value="${today}" style="min-width:130px"></td>
+    <td>
+      <select class="bulk-item-sel" style="min-width:200px">
+        <option value="">${t('sel.selectItem')}</option>
+        ${state.items.map(i => `<option value="${i.id}">${i.sku} — ${i.name}</option>`).join('')}
+      </select>
+    </td>
+    <td><input type="number" min="1" placeholder="0" style="min-width:70px;width:80px"></td>
+    <td><input type="text" placeholder="MRO / Purpose" style="min-width:160px"></td>
+    <td><input type="text" placeholder="Notes" style="min-width:120px"></td>
+    <td><button class="btn btn-sm btn-outline btn-icon" onclick="this.closest('tr').remove()">✕</button></td>
+  `;
+  tbody.appendChild(tr);
+}
+
+function submitBulkGrid() {
+  const type = document.getElementById('bulk-type').value;
+  const rows = document.querySelectorAll('#bulk-grid-body tr');
+  let success = 0, errors = 0;
+
+  rows.forEach(row => {
+    const cells = row.querySelectorAll('input, select');
+    const date = cells[0].value;
+    const itemId = cells[1].value;
+    const qty = parseInt(cells[2].value);
+    const ref = cells[3].value.trim();
+    const notes = cells[4].value.trim();
+
+    if (!itemId || !qty || qty <= 0 || !date) { errors++; return; }
+
+    const item = state.items.find(i => i.id === itemId);
+    if (!item) { errors++; return; }
+
+    if (type === 'IN') {
+      item.stock += qty;
+      state.receipts.push({ id:'r'+Date.now()+Math.random(), type:'IN', itemId, qty, date, mro:ref||'BULK', notes });
+    } else {
+      if (item.stock < qty) { errors++; return; }
+      if (!ref) { errors++; toast(`Row missing Purpose (required for OUT)`, 'error'); return; }
+      item.stock -= qty;
+      state.issuances.push({ id:'is'+Date.now()+Math.random(), type:'OUT', itemId, qty, date, purpose:ref, notes });
+    }
+    success++;
+  });
+
+  if (success > 0) {
+    document.getElementById('bulk-grid-body').innerHTML = '';
+    bulkRowCounter = 0;
+    addBulkRow();
+    updateDashStats();
+    renderCharts();
+    toast(`${success} records submitted!${errors?` (${errors} skipped)`:''}`, 'success');
+  } else {
+    toast(`No valid records. Check required fields.`, 'error');
+  }
+}
+
+function downloadBulkTemplate() {
+  const wb = XLSX.utils.book_new();
+  const wsData = [
+    ['Type','Date','SKU','Qty','MRO','PO','Purpose','Notes'],
+    ['IN','2024-01-15','SKU-E001','50','MRO-2024-001','PO-001','','Received from supplier'],
+    ['OUT','2024-01-15','SKU-C001','10','','','Maintenance work order #45','']
+  ];
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+  XLSX.utils.book_append_sheet(wb, ws, 'Bulk Template');
+  XLSX.writeFile(wb, 'MyGudang_Bulk_Template.xlsx');
+}
+
+function previewBulkExcel(e) {
+  const file = document.getElementById('bulk-file').files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const wb = XLSX.read(e.target.result, { type: 'binary' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json(ws, { header: 1 });
+
+      const preview = document.getElementById('bulk-preview');
+      if (data.length <= 1) { preview.innerHTML = '<div class="alert alert-warning">⚠ File is empty or has only headers.</div>'; return; }
+
+      const rows = data.slice(1).filter(r => r.length >= 4);
+      let imported = 0, skipped = 0;
+
+      preview.innerHTML = `<div class="alert alert-info">📋 Found ${rows.length} data rows. Processing...</div>`;
+
+      rows.forEach(row => {
+        const [type, date, sku, qty, mro, po, purpose, notes] = row;
+        const item = state.items.find(i => i.sku === String(sku));
+        const q = parseInt(qty);
+        if (!item || !q || q <= 0 || !date) { skipped++; return; }
+
+        if (String(type).toUpperCase() === 'IN') {
+          item.stock += q;
+          state.receipts.push({ id:'r'+Date.now()+Math.random(), type:'IN', itemId:item.id, qty:q, date:String(date), mro:mro||'IMPORT', po:po||'', notes:notes||'' });
+          imported++;
+        } else if (String(type).toUpperCase() === 'OUT') {
+          if (item.stock < q || !purpose) { skipped++; return; }
+          item.stock -= q;
+          state.issuances.push({ id:'is'+Date.now()+Math.random(), type:'OUT', itemId:item.id, qty:q, date:String(date), purpose:String(purpose), notes:notes||'' });
+          imported++;
+        } else { skipped++; }
+      });
+
+      updateDashStats(); renderCharts();
+      preview.innerHTML = `
+        <div class="alert alert-success">✅ Import complete! ${imported} records imported, ${skipped} skipped.</div>
+        <div class="table-container" style="max-height:220px;overflow-y:auto;margin-top:8px">
+          <table>
+            <thead><tr><th>Type</th><th>Date</th><th>SKU</th><th>Qty</th><th>Ref</th></tr></thead>
+            <tbody>${rows.slice(0,20).map(r=>`<tr><td>${r[0]||''}</td><td>${r[1]||''}</td><td>${r[2]||''}</td><td>${r[3]||''}</td><td>${r[4]||r[6]||''}</td></tr>`).join('')}</tbody>
+          </table>
+        </div>
+      `;
+      toast(`Imported ${imported} records from Excel!`, 'success');
+    } catch(err) {
+      document.getElementById('bulk-preview').innerHTML = `<div class="alert alert-danger">❌ Error reading file: ${err.message}</div>`;
+    }
+  };
+  reader.readAsBinaryString(file);
+}
+
+// ─────────────────────────────────────────────
+// FORECASTING
+// ─────────────────────────────────────────────
+function calcForecasts() {
+  const minLead = parseInt(document.getElementById('fc-min-lead')?.value) || 14;
+  const maxLead = parseInt(document.getElementById('fc-max-lead')?.value) || 30;
+  const windowDays = 30;
+  const now = new Date();
+  const cutoff = new Date(now - windowDays * 864e5);
+
+  state.forecasts = state.items.map(item => {
+    // Sum issuances in window
+    const recentIss = state.issuances.filter(iss => {
+      return iss.itemId === item.id && new Date(iss.date) >= cutoff;
+    });
+    const totalUsed = recentIss.reduce((s, r) => s + r.qty, 0);
+    const avgDaily = parseFloat((totalUsed / windowDays).toFixed(3));
+    const safetyStock = Math.ceil(avgDaily * (maxLead - minLead));
+    const reorderPoint = Math.ceil(avgDaily * maxLead + safetyStock);
+    const daysLeft = avgDaily > 0 ? Math.floor(item.stock / avgDaily) : 999;
+    const suggestQty = Math.max(0, reorderPoint - item.stock + safetyStock);
+
+    let status = 'ok';
+    if (item.stock <= item.minStock || daysLeft <= minLead) status = 'critical';
+    else if (item.stock <= reorderPoint || daysLeft <= maxLead) status = 'warning';
+
+    return { item, avgDaily, safetyStock, reorderPoint, daysLeft, suggestQty, status };
+  });
+
+  const critical = state.forecasts.filter(f => f.status === 'critical').length;
+  const warning = state.forecasts.filter(f => f.status === 'warning').length;
+  document.getElementById('fc-critical').textContent = critical;
+  document.getElementById('fc-warning').textContent = warning;
+
+  renderForecastTable();
+  updateDashStats();
+}
+
+function renderForecastTable() {
+  const filter = document.getElementById('fc-filter')?.value || '';
+  const tbody = document.getElementById('forecast-table-body');
+  if (!tbody) return;
+
+  let rows = state.forecasts;
+  if (filter) rows = rows.filter(f => f.status === filter);
+  rows = rows.sort((a,b) => { const order = {critical:0,warning:1,ok:2}; return order[a.status]-order[b.status]; });
+
+  tbody.innerHTML = rows.length ? rows.map(f => {
+    const { item, avgDaily, safetyStock, reorderPoint, daysLeft, suggestQty, status } = f;
+    const badgeMap = { critical:'badge-danger', warning:'badge-warning', ok:'badge-success' };
+    const labelMap = { critical:'🔴 Critical', warning:'🟡 Warning', ok:'🟢 OK' };
+    return `<tr>
+      <td><span class="sku-tag">${item.sku}</span></td>
+      <td><strong>${item.name}</strong></td>
+      <td>${item.stock} <small style="color:var(--text-muted)">${getUnit(item.unit)}</small></td>
+      <td><span style="font-family:'DM Mono',monospace">${avgDaily.toFixed(2)}/day</span></td>
+      <td><strong style="color:${daysLeft<=14?'var(--danger)':daysLeft<=30?'var(--warning)':'inherit'}">${daysLeft===999?'∞':daysLeft+'d'}</strong></td>
+      <td>${safetyStock}</td>
+      <td>${reorderPoint}</td>
+      <td>${suggestQty > 0 ? `<strong style="color:var(--accent)">${suggestQty}</strong>` : '—'}</td>
+      <td><span class="badge ${badgeMap[status]}">${labelMap[status]}</span></td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--text-muted)">No items match filter</td></tr>`;
+}
+
+// ─────────────────────────────────────────────
+// REPORTS
+// ─────────────────────────────────────────────
+function populateReportFilters() {
+  const rptCat = document.getElementById('rpt-cat');
+  if (rptCat) {
+    rptCat.innerHTML = `<option value="">${t('filter.allCategories')}</option>` +
+      state.categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  }
+  const today = new Date();
+  const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+  document.getElementById('rpt-start').value = startOfMonth;
+  document.getElementById('rpt-end').value = today.toISOString().split('T')[0];
+}
+
+function getFilteredReportData() {
+  const type = document.getElementById('rpt-type')?.value || 'all';
+  const start = document.getElementById('rpt-start')?.value || '';
+  const end = document.getElementById('rpt-end')?.value || '';
+  const cat = document.getElementById('rpt-cat')?.value || '';
+
+  if (type === 'stock') {
+    return state.items.filter(item => !cat || item.category === cat);
+  }
+
+  const allTx = [
+    ...state.receipts.map(r => ({ ...r, type:'IN' })),
+    ...state.issuances.map(r => ({ ...r, type:'OUT' }))
+  ];
+
+  return allTx.filter(tx => {
+    if (type !== 'all' && tx.type !== type) return false;
+    if (start && tx.date < start) return false;
+    if (end && tx.date > end) return false;
+    if (cat) {
+      const item = state.items.find(i => i.id === tx.itemId);
+      if (!item || item.category !== cat) return false;
+    }
+    return true;
+  }).sort((a,b) => a.date > b.date ? -1 : 1);
+}
+
+function generateReport() {
+  const type = document.getElementById('rpt-type')?.value || 'all';
+  const data = getFilteredReportData();
+  const thead = document.getElementById('rpt-thead');
+  const tbody = document.getElementById('rpt-tbody');
+  const count = document.getElementById('rpt-count');
+  if (!thead || !tbody) return;
+
+  count.textContent = `${data.length} records`;
+
+  if (type === 'stock') {
+    thead.innerHTML = `<tr><th>SKU</th><th>Item Name</th><th>Category</th><th>Unit</th><th>Stock</th><th>Min Stock</th><th>Status</th></tr>`;
+    tbody.innerHTML = data.map(item => {
+      const isLow = item.stock <= item.minStock;
+      return `<tr>
+        <td><span class="sku-tag">${item.sku}</span></td>
+        <td>${item.name}</td>
+        <td>${getCat(item.category)}</td>
+        <td>${getUnit(item.unit)}</td>
+        <td>${item.stock}</td>
+        <td>${item.minStock}</td>
+        <td>${isLow ? '<span class="badge badge-danger">Low</span>' : '<span class="badge badge-success">OK</span>'}</td>
+      </tr>`;
+    }).join('') || `<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--text-muted)">No data</td></tr>`;
+  } else {
+    thead.innerHTML = `<tr><th>Type</th><th>Date</th><th>SKU</th><th>Item</th><th>Qty</th><th>Ref / Purpose</th><th>Notes</th></tr>`;
+    tbody.innerHTML = data.map(tx => {
+      const item = state.items.find(i => i.id === tx.itemId);
+      const ref = tx.type === 'IN' ? (tx.mro || 'N/A') : tx.purpose;
+      return `<tr>
+        <td>${tx.type === 'IN' ? '<span class="badge badge-success">IN</span>' : '<span class="badge badge-danger">OUT</span>'}</td>
+        <td>${tx.date}</td>
+        <td>${item ? `<span class="sku-tag">${item.sku}</span>` : '?'}</td>
+        <td>${item ? item.name : '?'}</td>
+        <td>${tx.qty}</td>
+        <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis">${ref || '—'}</td>
+        <td style="color:var(--text-muted)">${tx.notes || '—'}</td>
+      </tr>`;
+    }).join('') || `<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--text-muted)">No data for selected filters</td></tr>`;
+  }
+}
+
+function exportReportExcel() {
+  const type = document.getElementById('rpt-type')?.value || 'all';
+  const data = getFilteredReportData();
+  const wb = XLSX.utils.book_new();
+
+  let wsData;
+  if (type === 'stock') {
+    wsData = [['SKU','Item Name','Category','Unit','Stock','Min Stock','Status'],
+      ...data.map(item => [item.sku, item.name, getCat(item.category), getUnit(item.unit), item.stock, item.minStock, item.stock<=item.minStock?'Low':'OK'])];
+  } else {
+    wsData = [['Type','Date','SKU','Item Name','Qty','Ref/Purpose','Notes'],
+      ...data.map(tx => {
+        const item = state.items.find(i => i.id === tx.itemId);
+        return [tx.type, tx.date, item?.sku||'?', item?.name||'?', tx.qty, tx.type==='IN'?(tx.mro||'N/A'):tx.purpose, tx.notes||''];
+      })];
+  }
+
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+  XLSX.utils.book_append_sheet(wb, ws, 'Report');
+  XLSX.writeFile(wb, `MyGudang_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
+  toast('Excel exported!', 'success');
+}
+
+function exportItemsExcel() {
+  const wsData = [['SKU','Item Name','Category','Unit','Stock','Min Stock','Description'],
+    ...state.items.map(i => [i.sku, i.name, getCat(i.category), getUnit(i.unit), i.stock, i.minStock, i.desc||''])];
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+  XLSX.utils.book_append_sheet(wb, ws, 'Items');
+  XLSX.writeFile(wb, 'MyGudang_Items.xlsx');
+  toast('Items exported!', 'success');
+}
+
+// ─────────────────────────────────────────────
+// DIGITAL SIGNATURE & PDF
+// ─────────────────────────────────────────────
+let sigCtx, sigCanvas;
+
+function initSignaturePad() {
+  sigCanvas = document.getElementById('sig-canvas');
+  if (!sigCanvas) return;
+  sigCtx = sigCanvas.getContext('2d');
+  sigCtx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--text-primary').trim() || '#333';
+  sigCtx.lineWidth = 2;
+  sigCtx.lineCap = 'round';
+
+  sigCanvas.addEventListener('mousedown', e => { state.sigPad.drawing = true; const r = sigCanvas.getBoundingClientRect(); sigCtx.beginPath(); sigCtx.moveTo(e.clientX-r.left, e.clientY-r.top); });
+  sigCanvas.addEventListener('mousemove', e => { if (!state.sigPad.drawing) return; const r = sigCanvas.getBoundingClientRect(); sigCtx.lineTo(e.clientX-r.left, e.clientY-r.top); sigCtx.stroke(); });
+  sigCanvas.addEventListener('mouseup', () => state.sigPad.drawing = false);
+  sigCanvas.addEventListener('mouseleave', () => state.sigPad.drawing = false);
+
+  sigCanvas.addEventListener('touchstart', e => { e.preventDefault(); state.sigPad.drawing = true; const r = sigCanvas.getBoundingClientRect(); const t = e.touches[0]; sigCtx.beginPath(); sigCtx.moveTo(t.clientX-r.left, t.clientY-r.top); }, {passive:false});
+  sigCanvas.addEventListener('touchmove', e => { e.preventDefault(); if (!state.sigPad.drawing) return; const r = sigCanvas.getBoundingClientRect(); const t = e.touches[0]; sigCtx.lineTo(t.clientX-r.left, t.clientY-r.top); sigCtx.stroke(); }, {passive:false});
+  sigCanvas.addEventListener('touchend', () => state.sigPad.drawing = false);
+}
+
+function clearSignature() {
+  if (sigCtx && sigCanvas) sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+}
+
+function openSignatureModal() {
+  openModal('sig-modal');
+  setTimeout(initSignaturePad, 100);
+}
+
+function exportPDFWithSignature() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+  const type = document.getElementById('rpt-type')?.value || 'all';
+  const data = getFilteredReportData();
+  const signerName = document.getElementById('sig-name').value || 'Authorized Signatory';
+  const signerRole = document.getElementById('sig-role').value || 'Warehouse Officer';
+  const startDate = document.getElementById('rpt-start')?.value || '';
+  const endDate = document.getElementById('rpt-end')?.value || '';
+  const now = new Date().toLocaleDateString('en-GB', {day:'2-digit',month:'long',year:'numeric'});
+
+  // Header
+  doc.setFillColor(15, 23, 42); doc.rect(0, 0, 297, 30, 'F');
+  doc.setTextColor(255,255,255);
+  doc.setFont('helvetica','bold'); doc.setFontSize(18);
+  doc.text('MyGudang — Inventory Report', 14, 14);
+  doc.setFont('helvetica','normal'); doc.setFontSize(9);
+  doc.text(`Generated: ${now}  |  Period: ${startDate} to ${endDate}  |  Type: ${type.toUpperCase()}`, 14, 23);
+
+  // Table
+  let tableBody = [];
+  let tableHead = [];
+
+  if (type === 'stock') {
+    tableHead = [['SKU','Item Name','Category','Unit','Stock','Min Stock','Status']];
+    tableBody = data.map(item => [item.sku, item.name, getCat(item.category), getUnit(item.unit), item.stock, item.minStock, item.stock<=item.minStock?'LOW':'OK']);
+  } else {
+    tableHead = [['Type','Date','SKU','Item','Qty','Ref/Purpose','Notes']];
+    tableBody = data.map(tx => {
+      const item = state.items.find(i => i.id === tx.itemId);
+      return [tx.type, tx.date, item?.sku||'?', item?.name||'?', tx.qty, tx.type==='IN'?(tx.mro||'N/A'):(tx.purpose||'N/A'), tx.notes||'—'];
+    });
+  }
+
+  doc.autoTable({
+    startY: 35,
+    head: tableHead,
+    body: tableBody,
+    styles: { fontSize: 8, cellPadding: 3 },
+    headStyles: { fillColor: [79, 142, 247], textColor: 255, fontStyle: 'bold' },
+    alternateRowStyles: { fillColor: [245, 247, 252] },
+    margin: { left: 14, right: 14 }
+  });
+
+  // Signature section
+  const finalY = Math.min(doc.lastAutoTable.finalY + 15, 175);
+
+  doc.setDrawColor(200,200,200); doc.setLineWidth(0.3);
+  doc.line(14, finalY, 100, finalY);
+
+  // Embed signature image
+  if (sigCanvas) {
+    const sigData = sigCanvas.toDataURL('image/png');
+    doc.addImage(sigData, 'PNG', 14, finalY - 25, 86, 22);
+  }
+
+  doc.setTextColor(80,80,80); doc.setFontSize(8); doc.setFont('helvetica','bold');
+  doc.text(signerName, 14, finalY + 5);
+  doc.setFont('helvetica','normal');
+  doc.text(signerRole, 14, finalY + 10);
+  doc.text(`Date: ${now}`, 14, finalY + 15);
+
+  doc.setTextColor(150,150,150); doc.setFontSize(7);
+  doc.text('This report was generated by MyGudang Inventory Management System', 14, 200);
+
+  doc.save(`MyGudang_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+  closeModal('sig-modal');
+  toast('PDF with digital signature exported!', 'success');
+}
+
+function exportForecastPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:'mm', format:'a4' });
+  const now = new Date().toLocaleDateString('en-GB', {day:'2-digit',month:'long',year:'numeric'});
+
+  doc.setFillColor(15,23,42); doc.rect(0,0,210,28,'F');
+  doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(16);
+  doc.text('Inventory Forecast Report', 14, 14);
+  doc.setFont('helvetica','normal'); doc.setFontSize(8);
+  doc.text(`Generated: ${now}  |  Lead Time: ${document.getElementById('fc-min-lead').value}–${document.getElementById('fc-max-lead').value} days`, 14, 22);
+
+  doc.autoTable({
+    startY: 34,
+    head: [['SKU','Item Name','Current Stock','Avg Daily Use','Days Left','Safety Stock','Reorder Pt','Suggest Qty','Status']],
+    body: state.forecasts.map(f => [f.item.sku, f.item.name, f.item.stock, f.avgDaily.toFixed(2), f.daysLeft===999?'∞':f.daysLeft, f.safetyStock, f.reorderPoint, f.suggestQty||'—', f.status.toUpperCase()]),
+    styles: { fontSize: 7.5, cellPadding: 2.5 },
+    headStyles: { fillColor:[167,139,250], textColor:255, fontStyle:'bold' },
+    alternateRowStyles: { fillColor:[248,247,255] },
+    margin: { left:14, right:14 },
+    didParseCell: (data) => {
+      if (data.section === 'body' && data.column.index === 8) {
+        const v = data.cell.raw;
+        if (v === 'CRITICAL') data.cell.styles.textColor = [220,38,38];
+        else if (v === 'WARNING') data.cell.styles.textColor = [217,119,6];
+        else data.cell.styles.textColor = [5,150,105];
+      }
+    }
+  });
+
+  doc.save(`MyGudang_Forecast_${new Date().toISOString().split('T')[0]}.pdf`);
+  toast('Forecast PDF exported!', 'success');
+}
+
+// ─────────────────────────────────────────────
+// DASHBOARD
+// ─────────────────────────────────────────────
+function updateDashStats() {
+  const lowStock = state.items.filter(i => i.stock <= i.minStock);
+  document.getElementById('stat-total-items').textContent = state.items.length;
+  document.getElementById('stat-items-change').textContent = `${state.items.length} SKUs`;
+  document.getElementById('stat-in').textContent = state.receipts.length;
+  document.getElementById('stat-out').textContent = state.issuances.length;
+  document.getElementById('stat-low').textContent = lowStock.length;
+  document.getElementById('stat-cats').textContent = state.categories.length;
+  document.getElementById('low-stock-count').textContent = lowStock.length;
+
+  // Low stock list on dashboard
+  const ll = document.getElementById('low-stock-list');
+  if (ll) {
+    ll.innerHTML = lowStock.length
+      ? lowStock.map(item => {
+          const pct = item.minStock > 0 ? Math.min(100, (item.stock / item.minStock) * 100) : 0;
+          return `<div style="display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--border)">
+            <span class="sku-tag">${item.sku}</span>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.name}</div>
+              <div class="reorder-bar"><div class="reorder-fill" style="width:${pct}%;background:var(--danger)"></div></div>
+            </div>
+            <div style="text-align:right;flex-shrink:0">
+              <div style="font-size:13px;font-weight:700;color:var(--danger)">${item.stock}</div>
+              <div style="font-size:10px;color:var(--text-muted)">min ${item.minStock}</div>
+            </div>
+          </div>`;
+        }).join('')
+      : `<div class="empty-state" style="padding:32px"><div class="empty-icon">✅</div><div>All items above minimum stock</div></div>`;
+  }
+}
+
+// ─────────────────────────────────────────────
+// CHARTS
+// ─────────────────────────────────────────────
+function renderCharts() {
+  const isDark = state.theme === 'dark';
+  const textColor = isDark ? '#8892b0' : '#4a5568';
+  const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+
+  Chart.defaults.color = textColor;
+  Chart.defaults.borderColor = gridColor;
+
+  renderTopSalesChart(textColor, gridColor);
+  renderCategoryChart(textColor);
+  renderMovementChart(textColor, gridColor);
+}
+
+function getColorPalette(n) {
+  const colors = ['#4f8ef7','#36d399','#fbbd23','#f87272','#a78bfa','#38bdf8','#fb923c','#4ade80','#f472b6','#60a5fa'];
+  return Array.from({length: n}, (_, i) => colors[i % colors.length]);
+}
+
+function renderTopSalesChart(textColor, gridColor) {
+  const days = parseInt(document.getElementById('chart-period')?.value) || 30;
+  const cutoff = new Date(Date.now() - days * 864e5);
+
+  // Aggregate issuances by item
+  const totals = {};
+  state.issuances.filter(r => new Date(r.date) >= cutoff).forEach(r => {
+    totals[r.itemId] = (totals[r.itemId] || 0) + r.qty;
+  });
+
+  const sorted = Object.entries(totals).sort((a,b) => b[1]-a[1]).slice(0, 8);
+  const labels = sorted.map(([id]) => state.items.find(i=>i.id===id)?.name || id);
+  const data = sorted.map(([,v]) => v);
+  const colors = getColorPalette(sorted.length);
+
+  destroyChart('topSalesChart');
+  const ctx = document.getElementById('topSalesChart');
+  if (!ctx) return;
+
+  state.charts.topSales = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets: [{ label: 'Qty Issued', data, backgroundColor: colors.map(c => c+'cc'), borderColor: colors, borderWidth: 2, borderRadius: 6 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${c.parsed.y} units` } } },
+      scales: {
+        x: { grid: { color: gridColor }, ticks: { color: textColor, maxRotation: 45 } },
+        y: { grid: { color: gridColor }, ticks: { color: textColor } }
+      }
+    }
+  });
+}
+
+function renderCategoryChart(textColor) {
+  // Stock value by category
+  const catStock = {};
+  state.items.forEach(item => {
+    const cat = state.categories.find(c => c.id === item.category);
+    const name = cat ? cat.name : 'Uncategorized';
+    catStock[name] = (catStock[name] || 0) + item.stock;
+  });
+
+  const labels = Object.keys(catStock);
+  const data = Object.values(catStock);
+  const colors = labels.map(l => { const c = state.categories.find(cat=>cat.name===l); return c ? c.color : '#888'; });
+
+  destroyChart('categoryChart');
+  const ctx = document.getElementById('categoryChart');
+  if (!ctx) return;
+
+  state.charts.category = new Chart(ctx, {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data, backgroundColor: colors.map(c=>c+'cc'), borderColor: colors, borderWidth: 2 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position:'bottom', labels: { color: textColor, padding:12, font:{size:11} } } }
+    }
+  });
+}
+
+function renderMovementChart(textColor, gridColor) {
+  // Last 14 days movement
+  const days = 14;
+  const labels = [], inData = [], outData = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(Date.now() - i * 864e5);
+    const ds = d.toISOString().split('T')[0];
+    labels.push(d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'}));
+    inData.push(state.receipts.filter(r => r.date === ds).reduce((s,r) => s+r.qty, 0));
+    outData.push(state.issuances.filter(r => r.date === ds).reduce((s,r) => s+r.qty, 0));
+  }
+
+  destroyChart('movementChart');
+  const ctx = document.getElementById('movementChart');
+  if (!ctx) return;
+
+  state.charts.movement = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label:'Goods In', data: inData, borderColor:'#36d399', backgroundColor:'rgba(54,211,153,0.1)', fill:true, tension:0.4, borderWidth:2, pointRadius:4 },
+        { label:'Goods Out', data: outData, borderColor:'#f87272', backgroundColor:'rgba(248,114,114,0.1)', fill:true, tension:0.4, borderWidth:2, pointRadius:4 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: textColor } } },
+      scales: {
+        x: { grid: { color: gridColor }, ticks: { color: textColor, maxRotation: 45 } },
+        y: { grid: { color: gridColor }, ticks: { color: textColor } }
+      }
+    }
+  });
+}
+
+function destroyChart(id) {
+  const key = id.replace('Chart','');
+  if (state.charts[key]) { state.charts[key].destroy(); delete state.charts[key]; }
+  // Also check by canvas ID pattern
+  const allKeys = Object.keys(state.charts);
+  allKeys.forEach(k => {
+    const c = state.charts[k];
+    if (c && c.canvas && c.canvas.id === id) { c.destroy(); delete state.charts[k]; }
+  });
+}
+
+// ─────────────────────────────────────────────
+// MODALS
+// ─────────────────────────────────────────────
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(overlay.id); });
+});
+
+function openLowStockModal() {
+  const lowStock = state.items.filter(i => i.stock <= i.minStock);
+  const content = document.getElementById('low-stock-modal-content');
+  content.innerHTML = lowStock.length
+    ? `<div class="table-container"><table>
+        <thead><tr><th>SKU</th><th>Item</th><th>Stock</th><th>Min</th><th>Unit</th></tr></thead>
+        <tbody>${lowStock.map(item => `<tr>
+          <td><span class="sku-tag">${item.sku}</span></td>
+          <td>${item.name}</td>
+          <td><strong style="color:var(--danger)">${item.stock}</strong></td>
+          <td>${item.minStock}</td>
+          <td>${getUnit(item.unit)}</td>
+        </tr>`).join('')}</tbody>
+      </table></div>`
+    : '<div class="empty-state"><div class="empty-icon">✅</div><div>All items are above minimum stock level!</div></div>';
+  openModal('low-stock-modal');
+}
+
+// ─────────────────────────────────────────────
+// TOAST
+// ─────────────────────────────────────────────
+function toast(msg, type = 'success') {
+  const icons = { success:'✅', error:'❌', warning:'⚠️', info:'ℹ️' };
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span style="font-size:16px">${icons[type]||'ℹ️'}</span><span style="flex:1">${msg}</span>`;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+// ─────────────────────────────────────────────
+// SEED SAMPLE TRANSACTIONS
+// ─────────────────────────────────────────────
+function seedSampleTransactions() {
+  const now = new Date();
+  const items = state.items;
+
+  // Generate 45 days of sample transactions
+  for (let d = 45; d >= 0; d--) {
+    const date = new Date(now - d * 864e5).toISOString().split('T')[0];
+
+    // 1-2 receipts per week
+    if (d % 7 === 0 && items.length) {
+      const item = items[Math.floor(Math.random() * items.length)];
+      const qty = Math.floor(Math.random() * 100) + 20;
+      item.stock += qty;
+      state.receipts.push({
+        id: 'r' + Date.now() + d,
+        type: 'IN', itemId: item.id, qty, date,
+        mro: `MRO-${date.replace(/-/g,'').slice(2)}-${Math.floor(Math.random()*999).toString().padStart(3,'0')}`,
+        po: `PO-${Math.floor(Math.random()*9999)}`, dn:'', origin:'Main Supplier', notes:''
+      });
+    }
+
+    // 2-4 issuances every day
+    const numIss = Math.floor(Math.random() * 3) + 1;
+    for (let j = 0; j < numIss; j++) {
+      if (!items.length) continue;
+      const item = items[Math.floor(Math.random() * items.length)];
+      const qty = Math.floor(Math.random() * 10) + 1;
+      if (item.stock >= qty) {
+        item.stock -= qty;
+        const purposes = ['Routine maintenance','Work order #'+Math.floor(Math.random()*1000),'Equipment repair','PM Schedule','Emergency repair'];
+        state.issuances.push({
+          id: 'is' + Date.now() + d + j,
+          type: 'OUT', itemId: item.id, qty, date,
+          purpose: purposes[Math.floor(Math.random()*purposes.length)],
+          requester: ['Tech Team','Maintenance','Operations','Engineering'][Math.floor(Math.random()*4)], notes:''
+        });
+      }
+    }
+  }
+}
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+function init() {
+  state.units = [...defaultUnits];
+  state.categories = [...defaultCategories];
+  state.items = defaultItems.map(i => ({...i}));
+
+  seedSampleTransactions();
+
+  updateDate();
+  setInterval(updateDate, 60000);
+
+  applyI18n();
+  renderUnitsTables();
+  populateItemDropdowns();
+  populateBulkDropdowns();
+  populateReportFilters();
+  updateDashStats();
+  setTimeout(renderCharts, 200);
+  calcForecasts();
+
+  // Add initial bulk rows
+  addBulkRow();
+  addBulkRow();
+  addBulkRow();
+}
+
+// ─────────────────────────────────────────────
+// ITEM MASTER — BULK IMPORT FROM EXCEL
+// ─────────────────────────────────────────────
+let itemImportData = []; // staging area for parsed rows
+
+function openItemImportModal() {
+  // Reset state
+  itemImportData = [];
+  document.getElementById('item-import-file').value = '';
+  document.getElementById('item-import-preview').innerHTML = '';
+  const importBtn = document.getElementById('btn-do-import');
+  importBtn.disabled = true;
+  importBtn.style.opacity = '0.5';
+  importBtn.style.cursor = 'not-allowed';
+
+  // Reset step indicator
+  ['import-step-1','import-step-2','import-step-3'].forEach((id,i) => {
+    const el = document.getElementById(id);
+    el.classList.toggle('active', i === 0);
+  });
+
+  // Populate chips
+  const catChips = document.getElementById('import-cat-chips');
+  catChips.innerHTML = '<span style="font-size:11px;color:var(--text-muted);align-self:center">Categories:</span>' +
+    state.categories.map(c => `<span style="display:inline-flex;align-items:center;gap:5px;background:var(--bg-card);border:1px solid var(--border);padding:3px 10px;border-radius:20px;font-size:11px;font-family:\'DM Mono\',monospace">
+      <span style="width:8px;height:8px;border-radius:50%;background:${c.color}"></span>${c.name}
+    </span>`).join('');
+
+  const unitChips = document.getElementById('import-unit-chips');
+  unitChips.innerHTML = '<span style="font-size:11px;color:var(--text-muted);align-self:center">Units:</span>' +
+    state.units.map(u => `<span style="background:var(--bg-card);border:1px solid var(--border);padding:3px 10px;border-radius:20px;font-size:11px;font-family:\'DM Mono\',monospace">${u.name}</span>`).join('');
+
+  // Make dropzone clickable
+  document.getElementById('item-import-dropzone').onclick = () => document.getElementById('item-import-file').click();
+
+  openModal('item-import-modal');
+}
+
+function downloadItemTemplate() {
+  const wb = XLSX.utils.book_new();
+  const headerRow = ['SKU','Name','Category','Unit','Stock','MinStock','Description'];
+  const exampleRows = state.items.slice(0,3).map(item => {
+    const cat = state.categories.find(c=>c.id===item.category);
+    const unit = state.units.find(u=>u.id===item.unit);
+    return [item.sku, item.name, cat?cat.name:'', unit?unit.name:'', item.stock, item.minStock, item.desc||''];
+  });
+  if (exampleRows.length === 0) {
+    const cat = state.categories[0];
+    const unit = state.units[0];
+    exampleRows.push(['SKU-001','Example Item',cat?cat.name:'Electrical',unit?unit.name:'pcs',100,20,'Optional description']);
+  }
+  const wsData = [headerRow, ...exampleRows];
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+  // Column widths
+  ws['!cols'] = [18,30,16,10,10,10,30].map(w => ({wch:w}));
+  XLSX.utils.book_append_sheet(wb, ws, 'Items');
+
+  // Second sheet: reference
+  const refData = [
+    ['Available Categories','Available Units'],
+    ...Array.from({length: Math.max(state.categories.length, state.units.length)}, (_,i) => [
+      state.categories[i] ? state.categories[i].name : '',
+      state.units[i] ? state.units[i].name : ''
+    ])
+  ];
+  const wsRef = XLSX.utils.aoa_to_sheet(refData);
+  wsRef['!cols'] = [{wch:20},{wch:16}];
+  XLSX.utils.book_append_sheet(wb, wsRef, 'Reference');
+
+  XLSX.writeFile(wb, 'MyGudang_Item_Import_Template.xlsx');
+  toast('Template downloaded!', 'success');
+}
+
+function handleItemImportDrop(e) {
+  e.preventDefault();
+  const zone = document.getElementById('item-import-dropzone');
+  zone.style.borderColor = '';
+  zone.style.background = '';
+  const file = e.dataTransfer.files[0];
+  if (!file) return;
+  const input = document.getElementById('item-import-file');
+  // Assign dropped file to the input via DataTransfer
+  const dt = new DataTransfer();
+  dt.items.add(file);
+  input.files = dt.files;
+  previewItemImport();
+}
+
+function previewItemImport() {
+  const file = document.getElementById('item-import-file').files[0];
+  const preview = document.getElementById('item-import-preview');
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const wb = XLSX.read(e.target.result, { type: 'binary' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json(ws, { header: 1 });
+
+      if (data.length < 2) {
+        preview.innerHTML = '<div class="alert alert-warning">⚠ File appears empty or has only the header row.</div>';
+        return;
+      }
+
+      const headers = data[0].map(h => String(h).trim().toLowerCase());
+      const skuIdx     = headers.findIndex(h => h === 'sku');
+      const nameIdx    = headers.findIndex(h => h === 'name');
+      const catIdx     = headers.findIndex(h => h === 'category');
+      const unitIdx    = headers.findIndex(h => h === 'unit');
+      const stockIdx   = headers.findIndex(h => h === 'stock');
+      const minIdx     = headers.findIndex(h => h === 'minstock');
+      const descIdx    = headers.findIndex(h => h === 'description');
+
+      if (skuIdx === -1 || nameIdx === -1) {
+        preview.innerHTML = '<div class="alert alert-danger">❌ Missing required columns: <strong>SKU</strong> and <strong>Name</strong>. Check your file headers.</div>';
+        return;
+      }
+
+      itemImportData = [];
+      const rows = data.slice(1).filter(r => r.length > 0 && (r[skuIdx]||'').toString().trim() !== '');
+
+      let valid = 0, willUpdate = 0, willAdd = 0, warnings = [];
+
+      rows.forEach((row, ri) => {
+        const sku  = String(row[skuIdx] || '').trim();
+        const name = String(row[nameIdx] || '').trim();
+        if (!sku || !name) { warnings.push(`Row ${ri+2}: Missing SKU or Name — skipped`); return; }
+
+        const catName  = catIdx !== -1 ? String(row[catIdx] || '').trim() : '';
+        const unitName = unitIdx !== -1 ? String(row[unitIdx] || '').trim() : '';
+        const stock    = parseInt(row[stockIdx]) || 0;
+        const minStock = parseInt(row[minIdx]) || 0;
+        const desc     = descIdx !== -1 ? String(row[descIdx] || '') : '';
+
+        const cat  = state.categories.find(c => c.name.toLowerCase() === catName.toLowerCase());
+        const unit = state.units.find(u => u.name.toLowerCase() === unitName.toLowerCase());
+
+        if (catName && !cat)  warnings.push(`Row ${ri+2}: Category "${catName}" not found — will use first available`);
+        if (unitName && !unit) warnings.push(`Row ${ri+2}: Unit "${unitName}" not found — will use first available`);
+
+        const existing = state.items.find(i => i.sku === sku);
+        const mode = existing ? 'update' : 'add';
+        if (mode === 'update') willUpdate++; else willAdd++;
+
+        itemImportData.push({
+          sku, name, desc, stock, minStock,
+          catId: cat ? cat.id : (state.categories[0]?.id || ''),
+          catName: cat ? cat.name : (catName || '—'),
+          unitId: unit ? unit.id : (state.units[0]?.id || ''),
+          unitName: unit ? unit.name : (unitName || '—'),
+          mode
+        });
+        valid++;
+      });
+
+      // Update step indicator
+      document.getElementById('import-step-1').classList.remove('active');
+      document.getElementById('import-step-2').classList.add('active');
+
+      // Build preview HTML
+      let html = `<div class="alert alert-${valid > 0 ? 'success' : 'warning'}" style="margin-bottom:12px">
+        ✅ <strong>${valid}</strong> valid rows found:
+        <span style="color:var(--success)"> ${willAdd} to add</span>,
+        <span style="color:var(--warning)"> ${willUpdate} to update</span>
+        ${warnings.length ? `— <span style="color:var(--warning)">${warnings.length} warning(s)</span>` : ''}
+      </div>`;
+
+      if (warnings.length) {
+        html += `<div class="alert alert-warning" style="margin-bottom:12px;font-size:12px;flex-direction:column;align-items:flex-start;gap:4px">
+          ⚠ Warnings:<br>${warnings.map(w => `<span style="display:block;padding-left:16px">• ${w}</span>`).join('')}
+        </div>`;
+      }
+
+      if (valid > 0) {
+        html += `<div class="table-container" style="max-height:280px;overflow-y:auto;margin-bottom:4px">
+          <table style="font-size:12px">
+            <thead><tr>
+              <th>Status</th><th>SKU</th><th>Name</th><th>Category</th><th>Unit</th><th>Stock</th><th>Min</th>
+            </tr></thead>
+            <tbody>
+              ${itemImportData.map(row => `<tr>
+                <td>${row.mode === 'update'
+                  ? '<span class="badge badge-warning">↻ Update</span>'
+                  : '<span class="badge badge-success">+ Add</span>'}</td>
+                <td><span class="sku-tag">${row.sku}</span></td>
+                <td><strong>${row.name}</strong></td>
+                <td>${row.catName}</td>
+                <td>${row.unitName}</td>
+                <td>${row.stock}</td>
+                <td>${row.minStock}</td>
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>`;
+
+        // Enable import button
+        const importBtn = document.getElementById('btn-do-import');
+        importBtn.disabled = false;
+        importBtn.style.opacity = '';
+        importBtn.style.cursor = '';
+        document.getElementById('import-step-2').classList.remove('active');
+        document.getElementById('import-step-3').classList.add('active');
+      }
+
+      preview.innerHTML = html;
+
+    } catch (err) {
+      preview.innerHTML = `<div class="alert alert-danger">❌ Failed to read file: ${err.message}</div>`;
+    }
+  };
+  reader.readAsBinaryString(file);
+}
+
+function executeItemImport() {
+  if (!itemImportData.length) { toast('No data to import', 'error'); return; }
+
+  let added = 0, updated = 0;
+
+  itemImportData.forEach(row => {
+    if (row.mode === 'update') {
+      const item = state.items.find(i => i.sku === row.sku);
+      if (item) {
+        item.name = row.name;
+        item.desc = row.desc;
+        item.stock = row.stock;
+        item.minStock = row.minStock;
+        if (row.catId) item.category = row.catId;
+        if (row.unitId) item.unit = row.unitId;
+        updated++;
+      }
+    } else {
+      state.items.push({
+        id: 'i' + Date.now() + Math.random().toString(36).slice(2,6),
+        sku: row.sku, name: row.name, desc: row.desc,
+        category: row.catId, unit: row.unitId,
+        stock: row.stock, minStock: row.minStock
+      });
+      added++;
+    }
+  });
+
+  closeModal('item-import-modal');
+  renderItemTable();
+  refreshAllDropdowns();
+  updateDashStats();
+  itemImportData = [];
+
+  toast(`Import complete: ${added} added, ${updated} updated`, 'success');
+}
+
+// ─────────────────────────────────────────────
+// FORECAST EXPORT MODAL
+// ─────────────────────────────────────────────
+let fcExportFmt = 'excel'; // 'excel' | 'pdf'
+let fcSelectedCats = new Set();
+let fcSelectedItems = new Set();
+
+function openForecastExportModal(fmt = 'excel') {
+  // Make sure forecasts are up to date
+  calcForecasts();
+
+  fcExportFmt = fmt;
+  setFcExportFmt(fmt);
+
+  // Init category selection (all selected)
+  fcSelectedCats = new Set(state.categories.map(c => c.id));
+  renderFcCatChecklist();
+
+  // Init item selection (all selected)
+  fcSelectedItems = new Set(state.items.map(i => i.id));
+  renderFcItemChecklist();
+
+  updateFcExportPreview();
+  openModal('forecast-export-modal');
+}
+
+function setFcExportFmt(fmt) {
+  fcExportFmt = fmt;
+  const excelBtn = document.getElementById('fc-fmt-excel');
+  const pdfBtn   = document.getElementById('fc-fmt-pdf');
+  const doBtn    = document.getElementById('fc-do-export-btn');
+  const title    = document.getElementById('fc-export-modal-title');
+
+  if (fmt === 'excel') {
+    excelBtn.style.background = 'var(--success)'; excelBtn.style.color = '#fff'; excelBtn.style.border = 'none';
+    pdfBtn.style.background = ''; pdfBtn.style.color = ''; pdfBtn.style.border = '';
+    doBtn.textContent = '📊 Export Excel';
+    title.textContent = '📊 Export Forecast Report — Excel';
+  } else {
+    pdfBtn.style.background = 'var(--danger)'; pdfBtn.style.color = '#fff'; pdfBtn.style.border = 'none';
+    excelBtn.style.background = ''; excelBtn.style.color = ''; excelBtn.style.border = '';
+    doBtn.textContent = '📄 Export PDF';
+    title.textContent = '📄 Export Forecast Report — PDF';
+  }
+  updateFcExportPreview();
+}
+
+function renderFcCatChecklist() {
+  const el = document.getElementById('fc-cat-checklist');
+  if (!el) return;
+  el.innerHTML = state.categories.map(c => `
+    <label style="display:flex;align-items:center;gap:10px;padding:7px 14px;cursor:pointer;transition:background 0.15s;text-transform:none;letter-spacing:0;font-weight:500;font-size:13px"
+      onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
+      <input type="checkbox" ${fcSelectedCats.has(c.id)?'checked':''} onchange="fcToggleCat('${c.id}',this.checked)"
+        style="width:15px;height:15px;accent-color:var(--accent)">
+      <span style="width:10px;height:10px;border-radius:50%;background:${c.color};flex-shrink:0"></span>
+      <span>${c.name}</span>
+      <span style="margin-left:auto;font-size:11px;font-family:'DM Mono',monospace;color:var(--text-muted)">${state.items.filter(i=>i.category===c.id).length} items</span>
+    </label>
+  `).join('') || '<div style="padding:16px;text-align:center;color:var(--text-muted);font-size:12px">No categories</div>';
+}
+
+function fcToggleCat(catId, checked) {
+  if (checked) fcSelectedCats.add(catId); else fcSelectedCats.delete(catId);
+  // Sync items: when a cat is deselected, deselect its items; when re-selected, re-select them
+  state.items.filter(i => i.category === catId).forEach(i => {
+    if (checked) fcSelectedItems.add(i.id); else fcSelectedItems.delete(i.id);
+  });
+  renderFcItemChecklist();
+  updateFcExportPreview();
+}
+
+function fcSelectAllCats(select) {
+  fcSelectedCats = select ? new Set(state.categories.map(c => c.id)) : new Set();
+  fcSelectedItems = select ? new Set(state.items.map(i => i.id)) : new Set();
+  renderFcCatChecklist();
+  renderFcItemChecklist();
+  updateFcExportPreview();
+}
+
+function renderFcItemChecklist() {
+  const el = document.getElementById('fc-item-checklist');
+  const search = (document.getElementById('fc-item-search')?.value || '').toLowerCase();
+  if (!el) return;
+
+  // Only show items whose category is selected
+  let items = state.items.filter(i => fcSelectedCats.has(i.category) || fcSelectedItems.has(i.id));
+  if (search) items = items.filter(i => i.sku.toLowerCase().includes(search) || i.name.toLowerCase().includes(search));
+
+  el.innerHTML = items.map(i => {
+    const fc = state.forecasts.find(f => f.item.id === i.id);
+    const statusDot = fc ? { critical:'🔴', warning:'🟡', ok:'🟢' }[fc.status] : '';
+    const cat = state.categories.find(c => c.id === i.category);
+    return `
+    <label style="display:flex;align-items:center;gap:10px;padding:7px 14px;cursor:pointer;transition:background 0.15s;text-transform:none;letter-spacing:0;font-weight:400;font-size:12px"
+      onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
+      <input type="checkbox" ${fcSelectedItems.has(i.id)?'checked':''} onchange="fcToggleItem('${i.id}',this.checked)"
+        style="width:14px;height:14px;accent-color:var(--accent)">
+      <span style="font-size:13px">${statusDot}</span>
+      <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text-muted);flex-shrink:0">${i.sku}</span>
+      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${i.name}</span>
+      ${cat ? `<span style="font-size:10px;color:var(--text-muted);flex-shrink:0">${cat.name}</span>` : ''}
+    </label>`;
+  }).join('') || '<div style="padding:16px;text-align:center;color:var(--text-muted);font-size:12px">No items match</div>';
+}
+
+function fcToggleItem(itemId, checked) {
+  if (checked) fcSelectedItems.add(itemId); else fcSelectedItems.delete(itemId);
+  updateFcExportPreview();
+}
+
+function fcSelectAllItems(select) {
+  const search = (document.getElementById('fc-item-search')?.value || '').toLowerCase();
+  let items = state.items.filter(i => fcSelectedCats.has(i.category));
+  if (search) items = items.filter(i => i.sku.toLowerCase().includes(search) || i.name.toLowerCase().includes(search));
+  items.forEach(i => { if (select) fcSelectedItems.add(i.id); else fcSelectedItems.delete(i.id); });
+  renderFcItemChecklist();
+  updateFcExportPreview();
+}
+
+function getFcFilteredForecasts() {
+  const inclCritical = document.getElementById('fc-status-critical')?.checked ?? true;
+  const inclWarning  = document.getElementById('fc-status-warning')?.checked ?? true;
+  const inclOk       = document.getElementById('fc-status-ok')?.checked ?? true;
+
+  return state.forecasts.filter(f => {
+    if (!fcSelectedItems.has(f.item.id)) return false;
+    if (f.status === 'critical' && !inclCritical) return false;
+    if (f.status === 'warning'  && !inclWarning)  return false;
+    if (f.status === 'ok'       && !inclOk)       return false;
+    return true;
+  }).sort((a,b) => { const o={critical:0,warning:1,ok:2}; return o[a.status]-o[b.status]; });
+}
+
+function updateFcExportPreview() {
+  const rows = getFcFilteredForecasts();
+  const countEl = document.getElementById('fc-export-count');
+  if (countEl) countEl.textContent = `${rows.length} item${rows.length!==1?'s':''} selected`;
+
+  const tbody = document.getElementById('fc-export-preview-body');
+  if (!tbody) return;
+
+  const preview = rows.slice(0, 8);
+  const badgeMap = { critical:'badge-danger', warning:'badge-warning', ok:'badge-success' };
+  const labelMap = { critical:'🔴 Critical', warning:'🟡 Warning', ok:'🟢 OK' };
+
+  tbody.innerHTML = preview.length ? preview.map(f => {
+    const { item, avgDaily, safetyStock, reorderPoint, daysLeft, suggestQty, status } = f;
+    const cat = state.categories.find(c => c.id === item.category);
+    return `<tr>
+      <td><span class="sku-tag">${item.sku}</span></td>
+      <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.name}</td>
+      <td style="font-size:10px">${cat?cat.name:'—'}</td>
+      <td style="text-align:right">${item.stock}</td>
+      <td style="text-align:right;font-family:'DM Mono',monospace">${avgDaily.toFixed(2)}</td>
+      <td style="text-align:right;font-weight:700;color:${daysLeft<=14?'var(--danger)':daysLeft<=30?'var(--warning)':'inherit'}">${daysLeft===999?'∞':daysLeft+'d'}</td>
+      <td style="text-align:right">${safetyStock}</td>
+      <td style="text-align:right">${reorderPoint}</td>
+      <td style="text-align:right;font-weight:700;color:var(--accent)">${suggestQty>0?suggestQty:'—'}</td>
+      <td><span class="badge ${badgeMap[status]}" style="font-size:10px">${labelMap[status]}</span></td>
+    </tr>`;
+  }).join('') + (rows.length > 8 ? `<tr><td colspan="10" style="text-align:center;padding:10px;color:var(--text-muted);font-size:11px">… and ${rows.length-8} more rows</td></tr>` : '')
+  : `<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--text-muted)">No items match current filters</td></tr>`;
+
+  // Re-listen to status checkboxes
+  ['fc-status-critical','fc-status-warning','fc-status-ok'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.onchange = updateFcExportPreview;
+  });
+}
+
+function executeForecastExport() {
+  const rows = getFcFilteredForecasts();
+  if (!rows.length) { toast('No items to export — adjust your filters', 'warning'); return; }
+
+  if (fcExportFmt === 'excel') exportForecastExcel(rows);
+  else exportForecastPDFDetailed(rows);
+
+  closeModal('forecast-export-modal');
+}
+
+function exportForecastExcel(rows) {
+  const wb = XLSX.utils.book_new();
+  const now = new Date().toLocaleString();
+  const minLead = document.getElementById('fc-min-lead')?.value || '14';
+  const maxLead = document.getElementById('fc-max-lead')?.value || '30';
+
+  // ── Summary sheet ──
+  const summaryData = [
+    ['MyGudang — Forecast Report'],
+    [`Generated: ${now}`],
+    [`Lead Time: Min ${minLead}d / Max ${maxLead}d  |  Analysis window: last 30 days`],
+    [`Total items exported: ${rows.length}`],
+    [],
+    ['SKU','Item Name','Category','Unit',
+     'Current Stock','Min Stock',
+     'Avg Daily Usage','Days Left',
+     'Safety Stock','Reorder Point','Suggest Order Qty',
+     'Status','Action Required']
+  ];
+
+  rows.forEach(f => {
+    const { item, avgDaily, safetyStock, reorderPoint, daysLeft, suggestQty, status } = f;
+    const action = status==='critical' ? 'ORDER IMMEDIATELY' : status==='warning' ? 'Order Soon' : 'Monitor';
+    summaryData.push([
+      item.sku, item.name, getCat(item.category), getUnit(item.unit),
+      item.stock, item.minStock,
+      avgDaily.toFixed(3),
+      daysLeft === 999 ? 'N/A (no usage)' : daysLeft,
+      safetyStock, reorderPoint,
+      suggestQty > 0 ? suggestQty : 0,
+      status.toUpperCase(),
+      action
+    ]);
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(summaryData);
+  ws['!cols'] = [14,32,14,8,13,10,16,10,13,14,16,12,18].map(w=>({wch:w}));
+  // Bold header row
+  XLSX.utils.book_append_sheet(wb, ws, 'Forecast Summary');
+
+  // ── Critical items sheet ──
+  const critical = rows.filter(f => f.status === 'critical');
+  if (critical.length) {
+    const critData = [
+      ['⚠ CRITICAL ITEMS — ORDER IMMEDIATELY'],
+      [],
+      ['SKU','Item Name','Category','Current Stock','Days Left','Suggest Order Qty','Reorder Point']
+    ];
+    critical.forEach(f => critData.push([
+      f.item.sku, f.item.name, getCat(f.item.category),
+      f.item.stock, f.daysLeft===999?0:f.daysLeft, f.suggestQty, f.reorderPoint
+    ]));
+    const wsCrit = XLSX.utils.aoa_to_sheet(critData);
+    wsCrit['!cols'] = [14,32,14,14,10,18,14].map(w=>({wch:w}));
+    XLSX.utils.book_append_sheet(wb, wsCrit, '🔴 Critical');
+  }
+
+  // ── Warning items sheet ──
+  const warning = rows.filter(f => f.status === 'warning');
+  if (warning.length) {
+    const warnData = [
+      ['⚡ WARNING ITEMS — Reorder Soon'],
+      [],
+      ['SKU','Item Name','Category','Current Stock','Days Left','Suggest Order Qty','Reorder Point']
+    ];
+    warning.forEach(f => warnData.push([
+      f.item.sku, f.item.name, getCat(f.item.category),
+      f.item.stock, f.daysLeft===999?'N/A':f.daysLeft, f.suggestQty, f.reorderPoint
+    ]));
+    const wsWarn = XLSX.utils.aoa_to_sheet(warnData);
+    wsWarn['!cols'] = [14,32,14,14,10,18,14].map(w=>({wch:w}));
+    XLSX.utils.book_append_sheet(wb, wsWarn, '🟡 Warning');
+  }
+
+  // ── By Category sheets ──
+  const cats = [...new Set(rows.map(f => f.item.category))];
+  cats.forEach(catId => {
+    const cat = state.categories.find(c => c.id === catId);
+    const catName = cat ? cat.name.slice(0,28) : 'Uncategorized';
+    const catRows = rows.filter(f => f.item.category === catId);
+    const catData = [
+      [`Category: ${catName}`],
+      [],
+      ['SKU','Item Name','Unit','Stock','Avg/Day','Days Left','Safety Stock','Reorder Pt','Suggest Qty','Status']
+    ];
+    catRows.forEach(f => catData.push([
+      f.item.sku, f.item.name, getUnit(f.item.unit),
+      f.item.stock, f.avgDaily.toFixed(3),
+      f.daysLeft===999?'∞':f.daysLeft, f.safetyStock, f.reorderPoint,
+      f.suggestQty>0?f.suggestQty:0, f.status.toUpperCase()
+    ]));
+    const wsCat = XLSX.utils.aoa_to_sheet(catData);
+    wsCat['!cols'] = [14,32,8,8,10,10,12,11,12,12].map(w=>({wch:w}));
+    XLSX.utils.book_append_sheet(wb, wsCat, catName);
+  });
+
+  XLSX.writeFile(wb, `ForecastReport_${new Date().toISOString().split('T')[0]}.xlsx`);
+  toast(`Excel exported — ${rows.length} items across ${cats.length} categories!`, 'success');
+}
+
+function exportForecastPDFDetailed(rows) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  const now = new Date().toLocaleDateString('en-GB', {day:'2-digit',month:'long',year:'numeric'});
+  const minLead = document.getElementById('fc-min-lead')?.value || '14';
+  const maxLead = document.getElementById('fc-max-lead')?.value || '30';
+
+  // ── Cover header ──
+  doc.setFillColor(42,33,24);
+  doc.rect(0,0,297,32,'F');
+  doc.setTextColor(245,237,228);
+  doc.setFont('helvetica','bold'); doc.setFontSize(16);
+  doc.text('MyGudang — Inventory Forecast Report', 14, 13);
+  doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
+  doc.text(`Generated: ${now}   |   Lead Time: Min ${minLead}d / Max ${maxLead}d   |   Items: ${rows.length}`, 14, 21);
+
+  // Status legend
+  const critical = rows.filter(f=>f.status==='critical').length;
+  const warning  = rows.filter(f=>f.status==='warning').length;
+  const ok       = rows.filter(f=>f.status==='ok').length;
+  doc.text(`Critical: ${critical}  |  Warning: ${warning}  |  OK: ${ok}`, 14, 28);
+
+  // ── Main table ──
+  doc.autoTable({
+    startY: 38,
+    head: [['SKU','Item Name','Category','Unit','Stock','Avg/Day','Days Left','Safety Stk','Reorder Pt','Suggest Qty','Status']],
+    body: rows.map(f => {
+      const { item, avgDaily, safetyStock, reorderPoint, daysLeft, suggestQty, status } = f;
+      return [
+        item.sku, item.name, getCat(item.category), getUnit(item.unit),
+        item.stock, avgDaily.toFixed(2),
+        daysLeft===999?'∞':daysLeft+'d',
+        safetyStock, reorderPoint,
+        suggestQty>0?suggestQty:'—',
+        status.toUpperCase()
+      ];
+    }),
+    styles: { fontSize: 7.5, cellPadding: 2.2, overflow:'ellipsize' },
+    headStyles: { fillColor:[232,131,74], textColor:255, fontStyle:'bold', fontSize:7.5 },
+    alternateRowStyles: { fillColor:[253,246,238] },
+    columnStyles: {
+      4:{halign:'right'}, 5:{halign:'right'}, 6:{halign:'right',fontStyle:'bold'},
+      7:{halign:'right'}, 8:{halign:'right'}, 9:{halign:'right',fontStyle:'bold'}
+    },
+    didParseCell: (data) => {
+      if (data.section === 'body' && data.column.index === 10) {
+        const status = data.cell.raw;
+        if (status === 'CRITICAL') { data.cell.styles.textColor = [220,40,40]; data.cell.styles.fontStyle = 'bold'; }
+        else if (status === 'WARNING') { data.cell.styles.textColor = [180,120,10]; data.cell.styles.fontStyle = 'bold'; }
+        else { data.cell.styles.textColor = [45,138,94]; }
+      }
+      if (data.section === 'body' && data.column.index === 6) {
+        const val = parseInt(data.cell.raw);
+        if (!isNaN(val) && val <= 14) data.cell.styles.textColor = [220,40,40];
+        else if (!isNaN(val) && val <= 30) data.cell.styles.textColor = [180,120,10];
+      }
+    },
+    margin: { left:14, right:14 }
+  });
+
+  // ── Per-category breakdown (new page) ──
+  const cats = [...new Set(rows.map(f=>f.item.category))];
+  cats.forEach(catId => {
+    const cat = state.categories.find(c=>c.id===catId);
+    const catRows = rows.filter(f=>f.item.category===catId);
+
+    doc.addPage();
+    doc.setFillColor(62,48,40);
+    doc.rect(0,0,297,22,'F');
+    doc.setTextColor(245,237,228);
+    doc.setFont('helvetica','bold'); doc.setFontSize(12);
+    doc.text(`Category: ${cat?cat.name:'Uncategorized'}  (${catRows.length} items)`, 14, 14);
+
+    doc.autoTable({
+      startY: 28,
+      head: [['SKU','Item Name','Unit','Current Stock','Min Stock','Avg/Day','Days Left','Safety Stk','Reorder Pt','Suggest Qty','Status']],
+      body: catRows.map(f => {
+        const { item, avgDaily, safetyStock, reorderPoint, daysLeft, suggestQty, status } = f;
+        return [
+          item.sku, item.name, getUnit(item.unit), item.stock, item.minStock,
+          avgDaily.toFixed(3), daysLeft===999?'∞':daysLeft+'d',
+          safetyStock, reorderPoint,
+          suggestQty>0?suggestQty:'—',
+          status.toUpperCase()
+        ];
+      }),
+      styles: { fontSize: 8, cellPadding: 2.5, overflow:'ellipsize' },
+      headStyles: { fillColor:[62,48,40], textColor:[245,237,228], fontStyle:'bold' },
+      alternateRowStyles: { fillColor:[253,248,242] },
+      columnStyles: {
+        3:{halign:'right'}, 4:{halign:'right'}, 5:{halign:'right'},
+        6:{halign:'right',fontStyle:'bold'}, 7:{halign:'right'}, 8:{halign:'right'},
+        9:{halign:'right',fontStyle:'bold'}
+      },
+      didParseCell: (data) => {
+        if (data.section==='body' && data.column.index===10) {
+          const s = data.cell.raw;
+          if (s==='CRITICAL') { data.cell.styles.textColor=[220,40,40]; data.cell.styles.fontStyle='bold'; }
+          else if (s==='WARNING') { data.cell.styles.textColor=[180,120,10]; data.cell.styles.fontStyle='bold'; }
+          else { data.cell.styles.textColor=[45,138,94]; }
+        }
+      },
+      margin: { left:14, right:14 }
+    });
+  });
+
+  // ── Footer on last page ──
+  const pageCount = doc.internal.getNumberOfPages();
+  for (let p=1;p<=pageCount;p++) {
+    doc.setPage(p);
+    doc.setFontSize(7); doc.setTextColor(160,140,120);
+    doc.text(`MyGudang Forecast Report  |  Page ${p} of ${pageCount}  |  ${now}`, 14, 205);
+  }
+
+  doc.save(`ForecastReport_${new Date().toISOString().split('T')[0]}.pdf`);
+  toast(`PDF exported — ${rows.length} items!`, 'success');
+}
+
+// ─────────────────────────────────────────────
+// ITEM HISTORY REPORT
+// ─────────────────────────────────────────────
+
+function initItemHistory() {
+  // Populate category filter
+  const catSel = document.getElementById('ih-cat');
+  if (catSel) {
+    catSel.innerHTML = '<option value="">All Categories</option>' +
+      state.categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  }
+  populateIHItemDropdown('');
+
+  // Default date range: this month
+  const today = new Date();
+  const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+  const ihStart = document.getElementById('ih-start');
+  const ihEnd = document.getElementById('ih-end');
+  if (ihStart && !ihStart.value) ihStart.value = startOfMonth;
+  if (ihEnd && !ihEnd.value) ihEnd.value = today.toISOString().split('T')[0];
+
+  generateItemHistory();
+}
+
+function populateIHItemDropdown(catFilter) {
+  const sel = document.getElementById('ih-item');
+  if (!sel) return;
+  const cur = sel.value;
+  const items = catFilter ? state.items.filter(i => i.category === catFilter) : state.items;
+  sel.innerHTML = '<option value="">— All Items —</option>' +
+    items.map(i => `<option value="${i.id}" ${i.id===cur?'selected':''}>${i.sku} — ${i.name}</option>`).join('');
+  if (!items.find(i => i.id === cur)) sel.value = '';
+}
+
+function filterIHItemDropdown() {
+  const cat = document.getElementById('ih-cat').value;
+  populateIHItemDropdown(cat);
+  generateItemHistory();
+}
+
+function setIHPreset(preset) {
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+  let start;
+  if (preset === 'month') {
+    start = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+  } else if (preset === 'year') {
+    start = new Date(today.getFullYear(), 0, 1).toISOString().split('T')[0];
+  } else if (preset === 'all') {
+    // Earliest transaction date
+    const allDates = [...state.receipts, ...state.issuances].map(r => r.date).sort();
+    start = allDates[0] || todayStr;
+  } else {
+    const d = new Date(today - preset * 864e5);
+    start = d.toISOString().split('T')[0];
+  }
+  document.getElementById('ih-start').value = start;
+  document.getElementById('ih-end').value = todayStr;
+  generateItemHistory();
+}
+
+// Core function: compute history for one item over date range
+function computeItemHistory(item, startDate, endDate) {
+  // Calculate start stock = current stock − IN after endDate + OUT after endDate
+  // − IN during period + OUT during period
+  // More accurately: walk backwards from current stock.
+
+  const allTx = [
+    ...state.receipts.filter(r => r.itemId === item.id).map(r => ({...r, txType:'IN'})),
+    ...state.issuances.filter(r => r.itemId === item.id).map(r => ({...r, txType:'OUT'}))
+  ].sort((a,b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+
+  // Start stock = current stock minus net change from all transactions AFTER startDate
+  // Actually: start stock = current stock − sum(IN after startDate) + sum(OUT after startDate)
+  const txAfterStart = allTx.filter(tx => tx.date >= startDate);
+  const inAfterStart  = txAfterStart.filter(tx => tx.txType==='IN').reduce((s,tx)=>s+tx.qty,0);
+  const outAfterStart = txAfterStart.filter(tx => tx.txType==='OUT').reduce((s,tx)=>s+tx.qty,0);
+  const startStock = item.stock - inAfterStart + outAfterStart;
+
+  // Period transactions
+  const periodTx = allTx.filter(tx => tx.date >= startDate && tx.date <= endDate);
+  const periodIn  = periodTx.filter(tx => tx.txType==='IN').reduce((s,tx)=>s+tx.qty,0);
+  const periodOut = periodTx.filter(tx => tx.txType==='OUT').reduce((s,tx)=>s+tx.qty,0);
+  const endStock  = startStock + periodIn - periodOut;
+
+  // Build running balance per transaction
+  let running = startStock;
+  const rows = periodTx.map(tx => {
+    const prev = running;
+    if (tx.txType === 'IN') running += tx.qty;
+    else running -= tx.qty;
+    return { ...tx, balanceBefore: prev, balanceAfter: running };
+  });
+
+  return { startStock, periodIn, periodOut, endStock, rows };
+}
+
+function generateItemHistory() {
+  const startDate = document.getElementById('ih-start')?.value || '';
+  const endDate   = document.getElementById('ih-end')?.value   || '';
+  const itemId    = document.getElementById('ih-item')?.value  || '';
+  const catId     = document.getElementById('ih-cat')?.value   || '';
+
+  if (!startDate || !endDate) {
+    document.getElementById('ih-report-body').innerHTML =
+      '<div class="alert alert-warning" style="margin:0">⚠ Please select a start and end date.</div>';
+    return;
+  }
+
+  // Determine which items to show
+  let items = state.items;
+  if (itemId) items = items.filter(i => i.id === itemId);
+  else if (catId) items = items.filter(i => i.category === catId);
+
+  if (!items.length) {
+    document.getElementById('ih-report-body').innerHTML =
+      '<div class="empty-state"><div class="empty-icon">📦</div><div>No items found for selected filters.</div></div>';
+    document.getElementById('ih-summary-row').style.display = 'none';
+    return;
+  }
+
+  // Compute per-item history
+  const results = items.map(item => ({ item, ...computeItemHistory(item, startDate, endDate) }));
+
+  // Update summary stats
+  const totalItems  = results.length;
+  const totalStart  = results.reduce((s,r) => s+r.startStock,0);
+  const totalIn     = results.reduce((s,r) => s+r.periodIn,0);
+  const totalOut    = results.reduce((s,r) => s+r.periodOut,0);
+  const totalEnd    = results.reduce((s,r) => s+r.endStock,0);
+
+  document.getElementById('ih-stat-items').textContent = totalItems;
+  document.getElementById('ih-stat-start').textContent = totalStart;
+  document.getElementById('ih-stat-in').textContent    = totalIn;
+  document.getElementById('ih-stat-out').textContent   = totalOut;
+  document.getElementById('ih-stat-end').textContent   = totalEnd;
+  document.getElementById('ih-summary-row').style.display = '';
+
+  // Render
+  const body = document.getElementById('ih-report-body');
+
+  if (itemId) {
+    // Single item: detailed card with full transaction list
+    body.innerHTML = results.map(r => renderIHCard(r, startDate, endDate, true)).join('');
+  } else {
+    // All items: summary table + expandable cards
+    body.innerHTML = renderIHSummaryTable(results, startDate, endDate) +
+      '<div style="margin-top:24px;font-family:\'DM Mono\',monospace;font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Per-Item Detail</div>' +
+      results.map(r => renderIHCard(r, startDate, endDate, false)).join('');
+  }
+}
+
+function renderIHSummaryTable(results, startDate, endDate) {
+  return `
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-header">
+      <div class="card-title">📊 Summary Table</div>
+      <div class="badge badge-accent">${results.length} items · ${startDate} → ${endDate}</div>
+    </div>
+    <div class="table-container">
+      <table>
+        <thead><tr>
+          <th>SKU</th><th>Item Name</th><th>Category</th><th>Unit</th>
+          <th style="text-align:right">Start Stock</th>
+          <th style="text-align:right;color:var(--success)">+ Received</th>
+          <th style="text-align:right;color:var(--danger)">− Issued</th>
+          <th style="text-align:right">End Stock</th>
+          <th>Status</th>
+        </tr></thead>
+        <tbody>
+          ${results.map(r => {
+            const { item, startStock, periodIn, periodOut, endStock } = r;
+            const cat  = state.categories.find(c => c.id === item.category);
+            const unit = state.units.find(u => u.id === item.unit);
+            const isLow = endStock <= item.minStock;
+            const diff = endStock - startStock;
+            return `<tr>
+              <td><span class="sku-tag">${item.sku}</span></td>
+              <td><strong>${item.name}</strong></td>
+              <td>${cat ? `<span style="display:inline-flex;align-items:center;gap:5px">
+                <span style="width:8px;height:8px;border-radius:50%;background:${cat.color}"></span>${cat.name}</span>` : '—'}</td>
+              <td style="color:var(--text-muted)">${unit ? unit.name : '—'}</td>
+              <td style="text-align:right;font-family:'DM Mono',monospace">${startStock}</td>
+              <td style="text-align:right;font-family:'DM Mono',monospace;color:var(--success)">${periodIn > 0 ? '+'+periodIn : '—'}</td>
+              <td style="text-align:right;font-family:'DM Mono',monospace;color:var(--danger)">${periodOut > 0 ? '−'+periodOut : '—'}</td>
+              <td style="text-align:right">
+                <strong style="font-family:'DM Mono',monospace">${endStock}</strong>
+                <span style="font-size:10px;margin-left:4px;color:${diff>0?'var(--success)':diff<0?'var(--danger)':'var(--text-muted)'}">${diff>0?'▲'+diff:diff<0?'▼'+Math.abs(diff):'='}</span>
+              </td>
+              <td>${isLow ? '<span class="badge badge-danger">⚠ Low</span>' : '<span class="badge badge-success">✓ OK</span>'}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function renderIHCard(r, startDate, endDate, expanded) {
+  const { item, startStock, periodIn, periodOut, endStock, rows } = r;
+  const cat  = state.categories.find(c => c.id === item.category);
+  const unit = state.units.find(u => u.id === item.unit);
+  const unitName = unit ? unit.name : '';
+  const diff = endStock - startStock;
+  const cardId = 'ihcard-' + item.id;
+
+  const txRows = rows.length ? rows.map(tx => {
+    const isIn = tx.txType === 'IN';
+    const ref  = isIn ? (tx.mro || tx.po || 'N/A') : (tx.purpose || '—');
+    return `<tr>
+      <td>${tx.date}</td>
+      <td>${isIn
+        ? '<span class="badge badge-success" style="font-size:10px">📥 IN</span>'
+        : '<span class="badge badge-danger" style="font-size:10px">📤 OUT</span>'}</td>
+      <td style="text-align:right;font-family:'DM Mono',monospace;color:${isIn?'var(--success)':'var(--danger)'}">
+        ${isIn ? '+' : '−'}${tx.qty} <small style="color:var(--text-muted)">${unitName}</small>
+      </td>
+      <td style="text-align:right" class="ih-running">${tx.balanceBefore}</td>
+      <td style="text-align:right" class="ih-running" style="color:var(--accent)">${tx.balanceAfter}</td>
+      <td style="color:var(--text-muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${ref}">${ref}</td>
+      <td style="color:var(--text-muted);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${tx.notes || '—'}</td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="7" class="ih-no-txn">No transactions in this period</td></tr>`;
+
+  return `
+  <div class="ih-item-card">
+    <div class="ih-item-header">
+      <div>
+        <span class="sku-tag" style="margin-bottom:4px;display:inline-block">${item.sku}</span>
+        <div class="ih-item-title">${item.name}</div>
+        ${cat ? `<span style="font-size:11px;color:var(--text-muted)">${cat.name}</span>` : ''}
+      </div>
+      <div class="ih-stock-flow" style="flex:1;justify-content:flex-end">
+        <div class="ih-flow-box">
+          <span class="ih-flow-label">Start</span>
+          <span class="ih-flow-val" style="color:var(--text-secondary)">${startStock}</span>
+          <span style="font-size:10px;color:var(--text-muted)">${unitName}</span>
+        </div>
+        <span class="ih-arrow">→</span>
+        <div class="ih-flow-box" style="border-color:var(--success)">
+          <span class="ih-flow-label" style="color:var(--success)">+ Received</span>
+          <span class="ih-flow-val" style="color:var(--success)">${periodIn}</span>
+          <span style="font-size:10px;color:var(--text-muted)">${unitName}</span>
+        </div>
+        <span class="ih-arrow">→</span>
+        <div class="ih-flow-box" style="border-color:var(--danger)">
+          <span class="ih-flow-label" style="color:var(--danger)">− Issued</span>
+          <span class="ih-flow-val" style="color:var(--danger)">${periodOut}</span>
+          <span style="font-size:10px;color:var(--text-muted)">${unitName}</span>
+        </div>
+        <span class="ih-arrow">→</span>
+        <div class="ih-flow-box" style="border-color:var(--accent);background:var(--accent-glow)">
+          <span class="ih-flow-label" style="color:var(--accent)">End Stock</span>
+          <span class="ih-flow-val" style="color:var(--accent)">${endStock}</span>
+          <span style="font-size:10px;color:${diff>0?'var(--success)':diff<0?'var(--danger)':'var(--text-muted)'}">${diff>0?'▲'+diff:diff<0?'▼'+Math.abs(diff):'no change'}</span>
+        </div>
+      </div>
+      <button class="btn btn-sm btn-outline" onclick="toggleIHCard('${cardId}')" id="btn-${cardId}">
+        ${expanded ? '▲ Collapse' : '▼ Expand'}
+      </button>
+    </div>
+    <div id="${cardId}" style="${expanded ? '' : 'display:none'}">
+      <div class="table-container">
+        <table class="ih-txn-table">
+          <thead><tr>
+            <th>Date</th><th>Type</th><th style="text-align:right">Qty</th>
+            <th style="text-align:right">Before</th><th style="text-align:right">After</th>
+            <th>Reference / Purpose</th><th>Notes</th>
+          </tr></thead>
+          <tbody>${txRows}</tbody>
+        </table>
+      </div>
+    </div>
+  </div>`;
+}
+
+function toggleIHCard(cardId) {
+  const card = document.getElementById(cardId);
+  const btn = document.getElementById('btn-' + cardId);
+  const isOpen = card.style.display !== 'none';
+  card.style.display = isOpen ? 'none' : '';
+  btn.textContent = isOpen ? '▼ Expand' : '▲ Collapse';
+}
+
+function exportItemHistoryExcel() {
+  const startDate = document.getElementById('ih-start')?.value || '';
+  const endDate   = document.getElementById('ih-end')?.value   || '';
+  const itemId    = document.getElementById('ih-item')?.value  || '';
+  const catId     = document.getElementById('ih-cat')?.value   || '';
+
+  let items = state.items;
+  if (itemId) items = items.filter(i => i.id === itemId);
+  else if (catId) items = items.filter(i => i.category === catId);
+
+  const wb = XLSX.utils.book_new();
+
+  // Summary sheet
+  const summaryData = [
+    ['Item History Report'],
+    [`Period: ${startDate} to ${endDate}`],
+    [`Generated: ${new Date().toLocaleString()}`],
+    [],
+    ['SKU','Item Name','Category','Unit','Start Stock','Received (IN)','Issued (OUT)','End Stock','Net Change']
+  ];
+
+  items.forEach(item => {
+    const { startStock, periodIn, periodOut, endStock } = computeItemHistory(item, startDate, endDate);
+    summaryData.push([
+      item.sku, item.name, getCat(item.category), getUnit(item.unit),
+      startStock, periodIn, periodOut, endStock, endStock - startStock
+    ]);
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(summaryData);
+  ws['!cols'] = [14,30,14,8,12,14,12,12,12].map(w => ({wch:w}));
+  XLSX.utils.book_append_sheet(wb, ws, 'Summary');
+
+  // Detail sheets per item (or first 10 if many)
+  const detailItems = items.slice(0, 20);
+  detailItems.forEach(item => {
+    const { startStock, periodIn, periodOut, endStock, rows } = computeItemHistory(item, startDate, endDate);
+    const sheetName = item.sku.replace(/[\/\\\?\*\[\]]/g,'').slice(0,28);
+    const detailData = [
+      [`Item: ${item.name} (${item.sku})`],
+      [`Period: ${startDate} to ${endDate}`],
+      [],
+      ['Start Stock', startStock, '', 'Received', periodIn, '', 'Issued', periodOut, '', 'End Stock', endStock],
+      [],
+      ['Date','Type','Qty','Balance Before','Balance After','Reference / Purpose','Notes']
+    ];
+    rows.forEach(tx => {
+      const ref = tx.txType==='IN' ? (tx.mro||tx.po||'N/A') : (tx.purpose||'—');
+      detailData.push([tx.date, tx.txType, tx.txType==='IN'?tx.qty:-tx.qty, tx.balanceBefore, tx.balanceAfter, ref, tx.notes||'']);
+    });
+    if (!rows.length) detailData.push(['No transactions in this period']);
+    const ws2 = XLSX.utils.aoa_to_sheet(detailData);
+    ws2['!cols'] = [12,8,8,14,14,30,20].map(w=>({wch:w}));
+    XLSX.utils.book_append_sheet(wb, ws2, sheetName);
+  });
+
+  XLSX.writeFile(wb, `ItemHistory_${startDate}_${endDate}.xlsx`);
+  toast(`Excel exported (${items.length} items)!`, 'success');
+}
+
+function exportItemHistoryPDF() {
+  const { jsPDF } = window.jspdf;
+  const startDate = document.getElementById('ih-start')?.value || '';
+  const endDate   = document.getElementById('ih-end')?.value   || '';
+  const itemId    = document.getElementById('ih-item')?.value  || '';
+  const catId     = document.getElementById('ih-cat')?.value   || '';
+
+  let items = state.items;
+  if (itemId) items = items.filter(i => i.id === itemId);
+  else if (catId) items = items.filter(i => i.category === catId);
+
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  const now = new Date().toLocaleDateString('en-GB', {day:'2-digit',month:'long',year:'numeric'});
+
+  // Header
+  doc.setFillColor(42, 33, 24);
+  doc.rect(0, 0, 297, 28, 'F');
+  doc.setTextColor(245, 237, 228);
+  doc.setFont('helvetica','bold'); doc.setFontSize(15);
+  doc.text('MyGudang — Item History Report', 14, 12);
+  doc.setFont('helvetica','normal'); doc.setFontSize(9);
+  doc.text(`Period: ${startDate} to ${endDate}   |   Generated: ${now}   |   Items: ${items.length}`, 14, 22);
+
+  let y = 35;
+
+  // Summary table
+  doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(42,33,24);
+  doc.text('Summary', 14, y); y += 4;
+
+  doc.autoTable({
+    startY: y,
+    head: [['SKU','Item Name','Category','Unit','Start Stock','+ Received','− Issued','End Stock','Net']],
+    body: items.map(item => {
+      const { startStock, periodIn, periodOut, endStock } = computeItemHistory(item, startDate, endDate);
+      const diff = endStock - startStock;
+      return [item.sku, item.name, getCat(item.category), getUnit(item.unit),
+        startStock, periodIn, periodOut, endStock, (diff>=0?'+':'')+diff];
+    }),
+    styles: { fontSize: 8, cellPadding: 2.5 },
+    headStyles: { fillColor: [232,131,74], textColor:255, fontStyle:'bold' },
+    alternateRowStyles: { fillColor: [253,246,238] },
+    columnStyles: { 4:{halign:'right'}, 5:{halign:'right'}, 6:{halign:'right'}, 7:{halign:'right'}, 8:{halign:'right'} },
+    margin: { left:14, right:14 }
+  });
+
+  y = doc.lastAutoTable.finalY + 10;
+
+  // Per-item detail (one table per item, new page if needed)
+  items.forEach(item => {
+    const { startStock, periodIn, periodOut, endStock, rows } = computeItemHistory(item, startDate, endDate);
+
+    if (y > 175) { doc.addPage(); y = 20; }
+
+    doc.setFont('helvetica','bold'); doc.setFontSize(9);
+    doc.setTextColor(232,131,74);
+    doc.text(`${item.sku} — ${item.name}`, 14, y);
+    doc.setFont('helvetica','normal'); doc.setTextColor(100,80,60);
+    doc.text(`Start: ${startStock}  +IN: ${periodIn}  −OUT: ${periodOut}  End: ${endStock}`, 14, y+5);
+    y += 9;
+
+    if (rows.length) {
+      doc.autoTable({
+        startY: y,
+        head: [['Date','Type','Qty','Before','After','Reference / Purpose','Notes']],
+        body: rows.map(tx => {
+          const ref = tx.txType==='IN' ? (tx.mro||tx.po||'N/A') : (tx.purpose||'—');
+          return [tx.date, tx.txType, (tx.txType==='IN'?'+':'-')+tx.qty, tx.balanceBefore, tx.balanceAfter, ref, tx.notes||'—'];
+        }),
+        styles: { fontSize: 7.5, cellPadding: 2 },
+        headStyles: { fillColor: [60,45,30], textColor:255 },
+        alternateRowStyles: { fillColor: [253,248,242] },
+        margin: { left:14, right:14 },
+        pageBreak: 'auto'
+      });
+      y = doc.lastAutoTable.finalY + 10;
+    } else {
+      doc.setFontSize(8); doc.setTextColor(150,120,100);
+      doc.text('No transactions in this period.', 18, y); y += 8;
+    }
+  });
+
+  doc.save(`ItemHistory_${startDate}_${endDate}.pdf`);
+  toast('PDF exported!', 'success');
+}
+
+// ─────────────────────────────────────────────
+// HAMBURGER / SIDEBAR MOBILE
+// ─────────────────────────────────────────────
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
+  const btn = document.getElementById('hamburger');
+  const isOpen = sidebar.classList.toggle('open');
+  overlay.classList.toggle('open', isOpen);
+  btn.classList.toggle('open', isOpen);
+  document.body.style.overflow = isOpen ? 'hidden' : '';
+}
+
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('open');
+  document.getElementById('hamburger').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// Close sidebar on nav click (mobile)
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => {
+    if (window.innerWidth <= 768) closeSidebar();
+  });
+});
+
+// Close on resize to desktop
+window.addEventListener('resize', () => {
+  if (window.innerWidth > 768) closeSidebar();
+});
+
+init();
+</script>
+</body>
+</html>
